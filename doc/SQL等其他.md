@@ -311,12 +311,12 @@ SHOW FULL PROCESSLIST;
 
 ### 查看 InnoDB 事务
 
-| 字段 | 说明 |
-|------|------|
-| trx_mysql_thread_id | 对应 ProcessList 的线程 ID |
-| trx_started | 事务开始时间 |
-| trx_state | 事务状态（RUNNING、LOCK WAIT 等） |
-| trx_query | 当前执行 SQL |
+| 字段                  | 说明                        |
+| ------------------- | ------------------------- |
+| trx_mysql_thread_id | 对应 ProcessList 的线程 ID     |
+| trx_started         | 事务开始时间                    |
+| trx_state           | 事务状态（RUNNING、LOCK WAIT 等） |
+| trx_query           | 当前执行 SQL                  |
 
 ```sql
 SELECT trx_mysql_thread_id, trx_started, trx_state, trx_query
