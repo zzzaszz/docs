@@ -75,11 +75,11 @@ LIMIT 20
 
 ## MySQL IFNULL / COALESCE / NULLIF
 
-| 函数 | 说明 |
-|------|------|
-| `IFNULL(expr1, expr2)` | 如果 expr1 为 NULL，返回 expr2 |
-| `NULLIF(expr1, expr2)` | 如果相等返回 NULL，用于除数不为 0，`''` 也会返回 null |
-| `COALESCE(v1, v2, ...)` | 返回第一个不为 NULL 的值，SQL 标准 |
+| 函数                      | 说明                                  |
+| ----------------------- | ----------------------------------- |
+| `IFNULL(expr1, expr2)`  | 如果 expr1 为 NULL，返回 expr2            |
+| `NULLIF(expr1, expr2)`  | 如果相等返回 NULL，用于除数不为 0，`''` 也会返回 null |
+| `COALESCE(v1, v2, ...)` | 返回第一个不为 NULL 的值，SQL 标准              |
 
 ```sql
 -- 组合判断空字符串
