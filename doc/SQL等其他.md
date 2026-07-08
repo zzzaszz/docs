@@ -75,11 +75,11 @@ LIMIT 20
 
 ## MySQL IFNULL / COALESCE / NULLIF
 
-| 函数                      | 说明                                  |
-| ----------------------- | ----------------------------------- |
-| `IFNULL(expr1, expr2)`  | 如果 expr1 为 NULL，返回 expr2            |
-| `NULLIF(expr1, expr2)`  | 如果相等返回 NULL，用于除数不为 0，`''` 也会返回 null |
-| `COALESCE(v1, v2, ...)` | 返回第一个不为 NULL 的值，SQL 标准              |
+| 函数 | 说明 |
+|:---|:---|
+| `IFNULL(expr1, expr2)` | 如果 expr1 为 NULL，返回 expr2 |
+| `NULLIF(expr1, expr2)` | 如果 expr1 = expr2 返回 NULL，用于除数不为 0，`''` 也会返回 null |
+| `COALESCE(v1, v2, ...)` | 返回第一个不为 NULL 的值，SQL 标准 |
 
 ```sql
 -- 组合判断空字符串
@@ -170,80 +170,63 @@ ORDER BY Mat_Goods.goodsuid ASC
 LIMIT 10
 ```
 
-## EXPLAIN 字段详解
+### EXPLAIN 字段详解
 
-#### 1、id
-
+**1️⃣ id**
 | 值 | 含义 |
-|----|------|
+|:---|:---|
 | 1 | 最外层查询 |
 | 2 | 子查询 |
 | 数字越大 | 越先执行 |
 
-#### 2、select_type
-
+**2️⃣ select_type**
 | 值 | 含义 |
-|----|------|
+|:---|:---|
 | SIMPLE | 普通查询 |
 | PRIMARY | 主查询 |
 | SUBQUERY | 子查询 |
 | DERIVED | 临时表子查询 |
 | UNION | UNION 中的查询 |
 
-#### 3、table
+**3️⃣ table** — 当前访问的表。
 
-当前访问的表。
+**4️⃣ type（性能排行）**
+| type | 性能 | 含义 |
+|:---:|:---:|:---|
+| system | ★★★★★ | 系统表，仅1行 |
+| const | ★★★★★ | 主键唯一查找 |
+| eq_ref | ★★★★☆ | 主键关联 |
+| ref | ★★★★ | 普通索引等值查询 |
+| range | ★★★☆ | 范围扫描 |
+| index | ★★ | 全索引扫描 |
+| ALL | ★ | 全表扫描 |
 
-#### 4、type（性能排行）
+**5️⃣ possible_keys** — 可能使用的索引。
 
-|  type  |  性能   |    含义    |
-| :----: | :---: | :------: |
-| system | ★★★★★ | 系统表，仅1行  |
-| const  | ★★★★★ |  主键唯一查找  |
-| eq_ref | ★★★★☆ |   主键关联   |
-|  ref   | ★★★★  | 普通索引等值查询 |
-| range  | ★★★☆  |   范围扫描   |
-| index  |  ★★   |  全索引扫描   |
-|  ALL   |   ★   |   全表扫描   |
+**6️⃣ key** — 实际使用的索引。
 
-#### 5、possible_keys
+**7️⃣ key_len** — 使用索引长度，排查联合索引时很有用。
 
-可能使用的索引。
+**8️⃣ ref** — 索引匹配来源。
 
-#### 6、key
-
-实际使用的索引。
-
-#### 7、key_len
-
-使用索引长度，一般排查联合索引时很有用。
-
-#### 8、ref
-
-表示索引匹配来源。
-
-#### 9、rows（预计扫描行数）
-
+**9️⃣ rows（预计扫描行数）**
 | rows | 含义 |
-|------|------|
+|:---|:---|
 | 1 | 极好 |
 | 10 | 很好 |
 | 100 | 正常 |
 | 10000+ | 要关注 |
 | 100000+ | 容易慢 |
 
-#### 10、filtered
+**🔟 filtered** — 过滤率。`rows × filtered% ≈ 最终参与下一步的数据量`
 
-过滤率。`rows × filtered% ≈ 最终参与下一步的数据量`
-
-#### 11、Extra
-
+**⓫ Extra**
 | 值 | 含义 |
-|----|------|
+|:---|:---|
 | `Using where` | 需要额外判断 WHERE 条件，正常 |
-| `Using index` | **覆盖索引，最好**，不用回表 |
-| `Using filesort` | ⚠️ 额外排序，**危险**（通常来自 ORDER BY 没利用索引） |
-| `Using temporary` | ⚠️ 临时表，**危险**（通常来自 GROUP BY、DISTINCT） |
+| `Using index` | ✅ 覆盖索引，最好，不用回表 |
+| `Using filesort` | ⚠️ 额外排序，危险（通常来自 ORDER BY 没利用索引） |
+| `Using temporary` | ⚠️ 临时表，危险（通常来自 GROUP BY、DISTINCT） |
 | `Range checked for each record` | 逐行判断是否可使用索引，性能一般 |
 
 ---
@@ -263,7 +246,7 @@ LIMIT 10
 假设索引：`(Tenantid, VirtualItem, EnabledMark, GoodsState)`
 
 | SQL 条件 | 是否充分利用索引 |
-|----------|-----------------|
+|:---|:---|
 | Tenantid | ✅ |
 | Tenantid + VirtualItem | ✅ |
 | Tenantid + VirtualItem + EnabledMark | ✅ |
@@ -278,7 +261,7 @@ LIMIT 10
 ### 单列索引 vs 联合索引
 
 | 维度 | 单列索引 | 联合索引 |
-|------|---------|---------|
+|:---|:---|:---|
 | WHERE 过滤 | 一般 | **优秀** |
 | ORDER BY | 差 | **优秀** |
 | LIMIT | 一般 | **优秀** |
@@ -292,16 +275,16 @@ LIMIT 10
 
 ### 查看所有线程（SHOW FULL PROCESSLIST）
 
-| 字段      | 说明                                                                          |
-| ------- | --------------------------------------------------------------------------- |
-| Id      | 线程 ID，可用于 KILL                                                              |
-| User    | 登录用户                                                                        |
-| Host    | 客户端 IP 及端口                                                                  |
-| db      | 当前数据库                                                                       |
-| Command | Sleep（空闲）、Query（执行中）、Connect（建立连接）、Binlog Dump（主从复制）、Daemon（后台）             |
-| Time    | 当前状态持续时间（秒）                                                                 |
-| State   | Sending data（扫描中）、updating（执行中）、Waiting for table metadata lock（等待 DDL 阻塞）… |
-| Info    | 正在执行的 SQL                                                                   |
+| 字段 | 说明 |
+|:---|:---|
+| Id | 线程 ID，可用于 KILL |
+| User | 登录用户 |
+| Host | 客户端 IP 及端口 |
+| db | 当前数据库 |
+| Command | Sleep（空闲）、Query（执行中）、Connect（建立连接）、Binlog Dump（主从复制）、Daemon（后台） |
+| Time | 当前状态持续时间（秒） |
+| State | Sending data（扫描中）、updating（执行中）、Waiting for table metadata lock（等待 DDL 阻塞）… |
+| Info | 正在执行的 SQL |
 
 ```sql
 SHOW FULL PROCESSLIST;
@@ -311,12 +294,12 @@ SHOW FULL PROCESSLIST;
 
 ### 查看 InnoDB 事务
 
-| 字段                  | 说明                        |
-| ------------------- | ------------------------- |
-| trx_mysql_thread_id | 对应 ProcessList 的线程 ID     |
-| trx_started         | 事务开始时间                    |
-| trx_state           | 事务状态（RUNNING、LOCK WAIT 等） |
-| trx_query           | 当前执行 SQL                  |
+| 字段 | 说明 |
+|:---|:---|
+| trx_mysql_thread_id | 对应 ProcessList 的线程 ID |
+| trx_started | 事务开始时间 |
+| trx_state | 事务状态（RUNNING、LOCK WAIT 等） |
+| trx_query | 当前执行 SQL |
 
 ```sql
 SELECT trx_mysql_thread_id, trx_started, trx_state, trx_query
@@ -333,11 +316,12 @@ SHOW ENGINE INNODB STATUS\G
 
 > 例如：`ACTIVE 1570 sec`，`965842 row lock(s)`
 
-重点关注：
-- ACTIVE 时间是否过长
-- row lock 是否异常大
-- 是否存在 LOCK WAIT
-- 是否有 DEADLOCK
+| 关注项 | 说明 |
+|:---|:---|
+| ACTIVE 时间 | 是否过长（如 1570 秒） |
+| row lock 数 | 是否异常大（如 96 万行锁） |
+| LOCK WAIT | 是否存在等待 |
+| DEADLOCK | 是否发生死锁 |
 
 ### 结束线程
 
@@ -365,8 +349,8 @@ EXPLAIN DELETE FROM Bus_AccountItem WHERE Tenantid = 'xxx';
 **重点关注 EXPLAIN 字段：**
 
 | 字段 | 理想值 | 说明 |
-|------|--------|------|
-| type | ref、range、const | 使用索引 |
+|:---|:---|:---|
+| type | ref / range / const | 使用索引 |
 | key | idx_xxx | 实际使用的索引 |
 | rows | 越小越好 | 预计扫描行数 |
 | Extra | Using index | 覆盖索引更优 |
@@ -374,11 +358,14 @@ EXPLAIN DELETE FROM Bus_AccountItem WHERE Tenantid = 'xxx';
 **如果出现以下情况，说明没有使用索引：**
 - `type = ALL`
 - `key = NULL`
-- `rows = 366296`
+- `rows` 行数巨大（如 366296）
 
-意味着：全表扫描，大表容易导致长事务、锁等待、死锁。
+> 意味着：全表扫描，大表容易导致长事务、锁等待、死锁。
 
-## git重新关联仓库
-```git
+---
+
+## Git 重新关联仓库
+
+```bash
 git remote set-url origin https://github.com/新用户名/docs.git
 ```
