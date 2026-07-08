@@ -1,7 +1,8 @@
 {
-  "name": "My Theme",
+  "name": "My Obsidian Theme",
   "version": "1.0.0",
   "minAppVersion": "1.8.0",
   "author": "caoshi",
-  "authorUrl": "https://github.com/zzzaszz/docs.git"
+  "authorUrl": "https://github.com/zzzaszz/docs",
+  "description": "一个优雅、简洁的 Obsidian 自定义主题"
 }

@@ -1,0 +1,256 @@
+/* ================================================================
+   My Obsidian Theme — 自定义主题
+   版本: 1.0.0
+   作者: caoshi
+   ================================================================ */
+
+/* ---------- 颜色变量（亮色模式） ---------- */
+.theme-light {
+  /* 基础色 */
+  --color-base-00: #ffffff;
+  --color-base-05: #fcfcfc;
+  --color-base-10: #f7f7f7;
+  --color-base-20: #f0f0f0;
+  --color-base-25: #e3e3e3;
+  --color-base-30: #d6d6d6;
+  --color-base-35: #c6c6c6;
+  --color-base-40: #b3b3b3;
+  --color-base-50: #999999;
+  --color-base-60: #808080;
+  --color-base-70: #666666;
+  --color-base-100: #1a1a1a;
+
+  /* 强调色 */
+  --color-accent-hsl: 220, 70%, 52%;
+  --color-accent: hsl(var(--color-accent-hsl));
+  --color-accent-1: hsl(var(--color-accent-hsl));
+
+  /* 交互色 */
+  --interactive-normal: var(--color-base-20);
+  --interactive-hover: var(--color-base-30);
+  --interactive-accent: var(--color-accent);
+  --interactive-accent-hover: hsl(220, 70%, 42%);
+
+  /* 背景色 */
+  --background-primary: var(--color-base-00);
+  --background-primary-alt: var(--color-base-10);
+  --background-secondary: var(--color-base-10);
+  --background-secondary-alt: var(--color-base-20);
+  --background-modifier-hover: rgba(0, 0, 0, 0.04);
+  --background-modifier-active-hover: rgba(0, 0, 0, 0.08);
+  --background-modifier-border: var(--color-base-25);
+  --background-modifier-border-hover: var(--color-base-30);
+  --background-modifier-border-focus: var(--color-accent);
+
+  /* 文字色 */
+  --text-normal: var(--color-base-100);
+  --text-muted: var(--color-base-50);
+  --text-faint: var(--color-base-40);
+  --text-accent: var(--color-accent);
+  --text-accent-hover: hsl(220, 70%, 42%);
+  --text-on-accent: #ffffff;
+
+  /* 编辑器 */
+  --text-highlight-bg: hsla(45, 100%, 50%, 0.2);
+  --text-selection: hsla(var(--color-accent-hsl), 0.15);
+  --code-background: var(--background-secondary);
+}
+
+/* ---------- 颜色变量（暗色模式） ---------- */
+.theme-dark {
+  /* 基础色 */
+  --color-base-00: #1e1e1e;
+  --color-base-05: #212121;
+  --color-base-10: #242424;
+  --color-base-20: #2a2a2a;
+  --color-base-25: #303030;
+  --color-base-30: #363636;
+  --color-base-35: #3d3d3d;
+  --color-base-40: #4a4a4a;
+  --color-base-50: #666666;
+  --color-base-60: #808080;
+  --color-base-70: #999999;
+  --color-base-100: #dbdbdb;
+
+  /* 强调色 */
+  --color-accent-hsl: 220, 75%, 62%;
+  --color-accent: hsl(var(--color-accent-hsl));
+  --color-accent-1: hsl(var(--color-accent-hsl));
+
+  /* 交互色 */
+  --interactive-normal: var(--color-base-20);
+  --interactive-hover: var(--color-base-30);
+  --interactive-accent: var(--color-accent);
+  --interactive-accent-hover: hsl(220, 75%, 72%);
+
+  /* 背景色 */
+  --background-primary: var(--color-base-00);
+  --background-primary-alt: var(--color-base-10);
+  --background-secondary: var(--color-base-10);
+  --background-secondary-alt: var(--color-base-20);
+  --background-modifier-hover: rgba(255, 255, 255, 0.06);
+  --background-modifier-active-hover: rgba(255, 255, 255, 0.1);
+  --background-modifier-border: var(--color-base-30);
+  --background-modifier-border-hover: var(--color-base-35);
+  --background-modifier-border-focus: var(--color-accent);
+
+  /* 文字色 */
+  --text-normal: var(--color-base-100);
+  --text-muted: var(--color-base-60);
+  --text-faint: var(--color-base-50);
+  --text-accent: var(--color-accent);
+  --text-accent-hover: hsl(220, 75%, 72%);
+  --text-on-accent: #ffffff;
+
+  /* 编辑器 */
+  --text-highlight-bg: hsla(45, 100%, 50%, 0.15);
+  --text-selection: hsla(var(--color-accent-hsl), 0.2);
+  --code-background: var(--background-secondary);
+}
+
+/* ================================================================
+   全局样式
+   ================================================================ */
+
+/* 工作区背景 */
+.workspace {
+  background-color: var(--background-primary);
+}
+
+/* 侧边栏间距 */
+.sidebar-toggle-button {
+  --icon-size: var(--icon-s);
+}
+
+/* 文件浏览器标题精简 */
+.nav-header {
+  padding: var(--size-2-3) var(--size-4-2);
+}
+
+/* 标签页圆角 */
+.workspace-tab-header {
+  border-radius: 6px 6px 0 0;
+}
+
+/* 状态栏精简 */
+.status-bar {
+  font-size: 12px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* ================================================================
+   编辑器样式
+   ================================================================ */
+
+/* 标题样式 */
+.cm-header-1,
+.markdown-rendered h1 {
+  font-size: 1.8em;
+  font-weight: 700;
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 0.2em;
+}
+
+.cm-header-2,
+.markdown-rendered h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+.cm-header-3,
+.markdown-rendered h3 {
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.cm-header-4,
+.markdown-rendered h4 {
+  font-size: 1.15em;
+  font-weight: 500;
+}
+
+/* 加粗和斜体 */
+.cm-strong,
+.markdown-rendered strong {
+  color: var(--color-accent);
+}
+
+/* 链接样式 */
+.cm-url,
+.markdown-rendered a {
+  color: var(--text-accent);
+  text-decoration: none;
+}
+
+.markdown-rendered a:hover {
+  text-decoration: underline;
+}
+
+/* 内联代码 */
+.cm-inline-code,
+.markdown-rendered code {
+  background-color: var(--code-background);
+  border-radius: 4px;
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+}
+
+/* 代码块 */
+.cm-s-obsidian .HyperMD-codeblock,
+.markdown-rendered pre {
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+/* 引用块 */
+.HyperMD-quote,
+.markdown-rendered blockquote {
+  border-left: 3px solid var(--color-accent);
+  background-color: var(--background-primary-alt);
+  border-radius: 0 6px 6px 0;
+  padding: 0.5em 1em;
+}
+
+/* 列表样式 */
+.markdown-rendered ul,
+.markdown-rendered ol {
+  padding-left: 1.5em;
+}
+
+/* 表格样式 */
+.markdown-rendered table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.markdown-rendered th {
+  background-color: var(--color-accent);
+  color: var(--text-on-accent);
+  font-weight: 600;
+  padding: 8px 12px;
+}
+
+.markdown-rendered td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.markdown-rendered tr:nth-child(even) td {
+  background-color: var(--background-primary-alt);
+}
+
+/* 水平分割线 */
+.markdown-rendered hr {
+  border: none;
+  border-top: 1px solid var(--background-modifier-border);
+  margin: 2em 0;
+}
+
+/* 标签（Tag）样式 */
+.tag {
+  background-color: hsla(var(--color-accent-hsl), 0.15);
+  color: var(--text-accent);
+  border-radius: 4px;
+  padding: 0.1em 0.5em;
+  font-size: 0.85em;
+}
