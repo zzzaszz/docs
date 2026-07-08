@@ -173,6 +173,7 @@ LIMIT 10
 ### EXPLAIN 字段详解
 
 **1️⃣ id**
+
 | 值 | 含义 |
 |:---|:---|
 | 1 | 最外层查询 |
@@ -180,6 +181,7 @@ LIMIT 10
 | 数字越大 | 越先执行 |
 
 **2️⃣ select_type**
+
 | 值 | 含义 |
 |:---|:---|
 | SIMPLE | 普通查询 |
@@ -191,6 +193,7 @@ LIMIT 10
 **3️⃣ table** — 当前访问的表。
 
 **4️⃣ type（性能排行）**
+
 | type | 性能 | 含义 |
 |:---:|:---:|:---|
 | system | ★★★★★ | 系统表，仅1行 |
@@ -210,6 +213,7 @@ LIMIT 10
 **8️⃣ ref** — 索引匹配来源。
 
 **9️⃣ rows（预计扫描行数）**
+
 | rows | 含义 |
 |:---|:---|
 | 1 | 极好 |
@@ -221,6 +225,7 @@ LIMIT 10
 **🔟 filtered** — 过滤率。`rows × filtered% ≈ 最终参与下一步的数据量`
 
 **⓫ Extra**
+
 | 值 | 含义 |
 |:---|:---|
 | `Using where` | 需要额外判断 WHERE 条件，正常 |
@@ -245,18 +250,18 @@ LIMIT 10
 
 假设索引：`(Tenantid, VirtualItem, EnabledMark, GoodsState)`
 
-| SQL 条件 | 是否充分利用索引 |
-|:---|:---|
-| Tenantid | ✅ |
-| Tenantid + VirtualItem | ✅ |
-| Tenantid + VirtualItem + EnabledMark | ✅ |
-| Tenantid + VirtualItem + EnabledMark + GoodsState | ✅ |
-| Tenantid + EnabledMark | ❌ 只能用 Tenantid |
-| VirtualItem | ❌ |
-| GoodsState | ❌ |
-| Tenantid + VirtualItem>0 + EnabledMark | ⚠️ 只能用到 VirtualItem（含） |
-| Tenantid + VirtualItem + ORDER BY GoodsState | ✅ |
-| GoodsName（无索引） | ❌ 全表扫描，不走索引 |
+| SQL 条件                                            | 是否充分利用索引               |
+| :------------------------------------------------ | :--------------------- |
+| Tenantid                                          | ✅                      |
+| Tenantid + VirtualItem                            | ✅                      |
+| Tenantid + VirtualItem + EnabledMark              | ✅                      |
+| Tenantid + VirtualItem + EnabledMark + GoodsState | ✅                      |
+| Tenantid + EnabledMark                            | ❌ 只能用 Tenantid         |
+| VirtualItem                                       | ❌                      |
+| GoodsState                                        | ❌                      |
+| Tenantid + VirtualItem>0 + EnabledMark            | ⚠️ 只能用到 VirtualItem（含） |
+| Tenantid + VirtualItem + ORDER BY GoodsState      | ✅                      |
+| GoodsName（无索引）                                    | ❌ 全表扫描，不走索引            |
 
 ### 单列索引 vs 联合索引
 
