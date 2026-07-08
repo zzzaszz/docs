@@ -170,7 +170,7 @@ ORDER BY Mat_Goods.goodsuid ASC
 LIMIT 10
 ```
 
-### EXPLAIN 字段详解
+## EXPLAIN 字段详解
 
 #### 1、id
 
