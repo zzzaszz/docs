@@ -21,7 +21,7 @@
 ### 通过 Git 安装
 
 ```bash
-cd your-vault/.obsidian/themes/
+cd your-111/.obsidian/themes/
 git clone https://github.com/zzzaszz/docs.git my-theme
 ```
 
