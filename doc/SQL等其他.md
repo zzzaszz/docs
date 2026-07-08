@@ -1,5 +1,3 @@
-# SQL 等其他
-
 ## Linux 相关
 
 ```bash
@@ -380,4 +378,7 @@ EXPLAIN DELETE FROM Bus_AccountItem WHERE Tenantid = 'xxx';
 
 意味着：全表扫描，大表容易导致长事务、锁等待、死锁。
 
-git重新关联仓库
+## git重新关联仓库
+```git
+git remote set-url origin https://github.com/新用户名/docs.git
+```
