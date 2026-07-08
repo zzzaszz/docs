@@ -379,3 +379,5 @@ EXPLAIN DELETE FROM Bus_AccountItem WHERE Tenantid = 'xxx';
 - `rows = 366296`
 
 意味着：全表扫描，大表容易导致长事务、锁等待、死锁。
+
+git重新关联仓库
