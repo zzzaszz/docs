@@ -374,3 +374,10 @@ EXPLAIN DELETE FROM Bus_AccountItem WHERE Tenantid = 'xxx';
 ```bash
 git remote set-url origin https://github.com/新用户名/docs.git
 ```
+## git单独代理
+```bash
+git config --local http.https://github.com.proxy http://127.0.0.1:7890
+
+git config --local --unset http.proxy
+git config --local --unset https.proxy
+```
