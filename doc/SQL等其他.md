@@ -381,3 +381,21 @@ git config --local http.https://github.com.proxy http://127.0.0.1:7890
 git config --local --unset http.proxy
 git config --local --unset https.proxy
 ```
+
+
+
+public static void main(String[] args) {  
+    System.out.println(isPalindrome(121));  
+    System.out.println(isPalindrome(123321));  
+    System.out.println(isPalindrome(1233311));  
+}  
+  
+public static boolean isPalindrome(int x) {  
+    char[] str = Collections.singletonList(x).toString().toCharArray();  
+    for (int i = 0; i < str.length; i++) {  
+        if (s[i] != )  
+    }  
+  
+    return false;  
+  
+}
