@@ -1,3 +1,10 @@
-remote_theme: pages-themes/cayman@v0.2.0
-title: 技术文档
-description: Java、Vue、MySQL学习笔记
+remote_theme: just-the-docs/just-the-docs
+
+title: 我的技术文档
+
+search_enabled: true
+
+heading_anchors: true
+
+toc:
+  enabled: true
