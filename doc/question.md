@@ -1,3 +1,4 @@
+# 问题
 ## 老版本 SQL Server 连接问题
 
 `testConnection` 测试连接时加入 `SELECT 1`，而不是调用封装好的方法，否则会报错。
