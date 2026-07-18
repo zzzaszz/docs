@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # My Obsidian Theme
 
 一个优雅、简洁的 Obsidian 自定义主题，同时支持亮色/暗色模式。
@@ -51,6 +50,3 @@ git clone https://github.com/zzzaszz/docs.git my-theme
 ## 📄 许可
 
 MIT License © 2025 caoshi
-=======
-theme
->>>>>>> 23364f834e25dfd33fd55bcb58d14d6810344678

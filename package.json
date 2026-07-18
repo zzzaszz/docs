@@ -1,7 +1,8 @@
 {
   "name": "docs",
   "version": "1.0.0",
-  "description": "<<<<<<< HEAD # My Obsidian Theme",
+  "description": "ZZZ 技术文档 - Java / Vue / SQL 学习笔记",
+  "type": "module",
   "main": "index.js",
   "directories": {
     "doc": "doc"
