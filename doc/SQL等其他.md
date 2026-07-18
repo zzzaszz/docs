@@ -393,9 +393,10 @@ public static void main(String[] args) {
 public static boolean isPalindrome(int x) {  
     char[] str = Collections.singletonList(x).toString().toCharArray();  
     for (int i = 0; i < str.length; i++) {  
-        if (s[i] != )  
+        if (str[i] != str[str.length - i])
+	        return false;  
     }  
   
-    return false;  
+    return true;  
   
 }
