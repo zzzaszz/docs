@@ -350,6 +350,10 @@ SHOW CREATE TABLE Bus_AccountItem;
 
 -- 查看是否走索引
 EXPLAIN DELETE FROM Bus_AccountItem WHERE Tenantid = 'xxx';
+
+-- 索引刷新
+ANALYZE TABLE Bus_MachiningItem;
+ANALYZE TABLE Bus_Machining;
 ```
 
 **重点关注 EXPLAIN 字段：**
