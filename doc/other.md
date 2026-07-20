@@ -387,3 +387,7 @@ git config --local --unset http.proxy
 git config --local --unset https.proxy
 ```
 
+## YAML部署docker配置信息
+```yaml
+
+```
