@@ -72,7 +72,12 @@ export default defineConfig({
       { text: '前端', link: '/doc/web' },
       { text: '后端', link: '/doc/svc' },
       { text: 'DB / 其他', link: '/doc/other' },
-      { text: '相关问题', link: '/doc/question' }
+      { text: '相关问题', link: '/doc/question' },
+      {
+        text: '工具',
+        link: '/tools/',
+        activeMatch: '/tools/'
+      }
     ],
 
     // 左侧目录 —— 自动扫描 md 里的 ## 标题
@@ -80,7 +85,19 @@ export default defineConfig({
       '/doc/web':      autoSidebar('doc/web.md',      '前端'),
       '/doc/svc':      autoSidebar('doc/svc.md',      '后端'),
       '/doc/other':    autoSidebar('doc/other.md',    'DB / 其他'),
-      '/doc/question': autoSidebar('doc/question.md', '相关问题')
+      '/doc/question': autoSidebar('doc/question.md', '相关问题'),
+      '/tools/': [
+        {
+          text: '开发工具',
+          collapsed: false,
+          items: [
+            { text: '工具总览',      link: '/tools/' },
+            { text: '时区转换',      link: '/tools/timezone' },
+            { text: '时间戳转换',    link: '/tools/timestamp' },
+            { text: 'JSON 格式化',   link: '/tools/json' }
+          ]
+        }
+      ]
     },
 
     // 右侧大纲

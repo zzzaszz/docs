@@ -389,5 +389,78 @@ git config --local --unset https.proxy
 
 ## YAML部署docker配置信息
 ```yaml
+networks:
+  sa-network:
+    external: true
+    name: sa-network  # 引用同一个外部网络
+    
+services:
+ # web主应用
+  mf-omsweb-pms:
+    image: hub.xxxx.com/inksdev/mf-omsweb:vue3-93
+    container_name: mf-omsweb-pms
+    restart: always
+    ports:
+      - "30011:80"
+    environment:
+      - BASE_URL=https://xxxx-pmsapi.vip.xxxx.com   # 后端API
+      - SYSTEM_TITLE=项目管理系统
+      - SYSTEM_EULA=xxx
+      - SYSTEM_CODE=xxx-pms
+      - DEPLOY_MODEL=standalone
+      - DEPLOY_ENV=prod
+      - H5_SITE=http://app.xxx.com
+      - MQTT_URL=ws://dev.xxx.com/mqtt
+      - MQTT_PORT=18083   
+      - LOGIN_IMG=https://git.xxx.com/pool/team-image-bed/-/raw/main/xxx/2025/09/2_204037_xxx-login.png
+    networks:
+      - sa-network
 
+  # 后端
+  svc-mg-pms:
+    image: hub.xxx.com/inksdev/svc-mg-pms:SNAPSHOT-45
+    container_name: svc-mg-pms
+    hostname: svcmgpms   # 网关中应用
+    restart: always
+    ports:
+      - "30013:8080"
+    environment:
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS=-Duser.timezone=GMT+8
+      - DATABASE_SER=mysql8:3306/xxx# 数据库名
+      - FLOWABLE_ENABLED=false
+      - DATABASE_USER=root
+      - DATABASE_PD=xxxx
+      - LICENSE_KEY=
+      - REDIS_HOST=redis
+      - REDIS_PORT=xxxx
+      - REDIS_PD=xxxx@8123123
+      - SVC_FEIGN=http://127.0.0.1:8080   
+      - FAS_DEFAULT_BUCKET=xxx
+      - FAS_ENABLED=true
+      - FAS_BASE_URL=https://fas.vip.xxxx.com/
+      - FAS_TOKEN=fas_1781512912_c2c8561e
+    networks:
+      - sa-network
+      
+   # pms聚合
+  mg-stdweb-pms:
+    image: hub.xxxx.com/inksdev/mg-stdweb-pms:SNAPSHOT-63
+    container_name: mg-stdweb-pms
+    hostname: mgstdwebpms
+    restart: always
+    ports:
+      - "30012:80"
+    environment:
+      - BASE_URL=http://127.0.0.1:30003   # 后端API
+      - SYSTEM_TITLE=xxx管理系统
+      - SYSTEM_EULA=xxx
+      - SYSTEM_CODE=xxx-pms
+      - DEPLOY_MODEL=standalone
+      - DEPLOY_ENV=prod
+      - H5_SITE=http://app.xxx.com
+      - MQTT_URL=ws://dev.xxx.com/mqtt
+      - MQTT_PORT=18083
+    networks:
+      - sa-network               
 ```

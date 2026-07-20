@@ -16,6 +16,9 @@ hero:
       text: 开始阅读
       link: /doc/web
     - theme: alt
+      text: 🧰 开发工具
+      link: /tools/
+    - theme: alt
       text: GitHub
       link: https://github.com/zzzaszz/docs
 
@@ -43,6 +46,12 @@ features:
     details: SQL Server 兼容、MyBatis BATCH、CASE WHEN 批量更新、Redis 预警列表
     link: /doc/question
     linkText: 问题记录
+
+  - icon: 🧰
+    title: 开发工具
+    details: 时区、时间戳、JSON 格式化…… 平时开发常用的小工具，会持续增加
+    link: /tools/
+    linkText: 打开工具箱
 ---
 
 <div class="home-content vp-doc">
@@ -55,10 +64,12 @@ features:
 | 后端 | Optional、StringUtils、EasyPOI、Stream、线程、时间 API | [/doc/svc](/doc/svc) |
 | DB / 其他 | MySQL 索引、Linux、Git 代理 | [/doc/other](/doc/other) |
 | 问题记录 | SQL Server、批量写入 / 更新、Redis 预警 | [/doc/question](/doc/question) |
+| 🧰 开发工具 | 时区、时间戳、JSON 格式化…… | [/tools/](/tools/) |
 
 ## 关于本站
 
 - 用 [VitePress](https://vitepress.dev/) 搭的，支持本地搜索和深色模式。
 - 快捷键 <kbd>Ctrl</kbd> + <kbd>K</kbd> 打开搜索。
+- 顶部导航 **工具** 里放了平时常用的小工具，会持续加。
 
 </div>
