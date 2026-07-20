@@ -183,3 +183,164 @@
   background: var(--vp-c-brand-soft);
   color: #a8cdb6;
 }
+
+/* ===================================================================
+ * 移动端适配（≤ 768px 手机；≤ 480px 小屏）
+ * VitePress 默认已有一些响应式，这里补齐我们自定义样式的手机版本
+ * =================================================================== */
+
+/* ---------- 平板 & 手机通用（≤ 768px） ---------- */
+@media (max-width: 768px) {
+
+  /* 首页 hero：上下堆叠、图片缩小、文字下移 */
+  .VPHero .container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .VPHero .main {
+    order: 2;
+  }
+  .VPHero .image {
+    order: 1;
+    margin: 0 auto 24px;
+    max-width: 220px;
+  }
+  .VPHero .image-container {
+    width: 180px;
+    height: 180px;
+  }
+  .VPHero .heading .name,
+  .VPHero .heading .text {
+    font-size: 34px;
+    line-height: 1.2;
+  }
+  .VPHero .tagline {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .VPHero .actions {
+    justify-content: center;
+  }
+
+  /* 首页 features：一列，间距收紧 */
+  .VPHomeFeatures .items {
+    gap: 12px;
+  }
+  .VPFeature .box {
+    padding: 20px 20px;
+  }
+  .VPFeature .icon {
+    font-size: 28px;
+  }
+  .VPFeature .title {
+    font-size: 18px;
+  }
+
+  /* 快速导航 & 关于本站容器左右 padding 收紧 */
+  .home-content {
+    margin-top: 2rem;
+    padding: 0 20px;
+  }
+  .home-content h2 {
+    font-size: 20px;
+    margin-top: 32px;
+  }
+
+  /* 表格：允许横向滚动，避免手机被撑破 */
+  .vp-doc table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 14px;
+    /* border-radius 在 block + 横向滚动下不生效，去掉更干净 */
+    border-radius: 8px;
+  }
+  .vp-doc table th,
+  .vp-doc table td {
+    padding: 10px 12px;
+    white-space: nowrap;  /* 单元格不折行，横向滑动查看 */
+  }
+
+  /* 代码块：字号 / 内边距减小，允许出滚动条 */
+  .vp-doc div[class*='language-'] {
+    margin: 16px -20px;   /* 手机上让代码块延伸到屏幕两侧 */
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .vp-doc div[class*='language-'] pre {
+    padding: 14px 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .vp-doc .line-numbers-wrapper {
+    padding-top: 14px;
+    font-size: 13px;
+  }
+
+  /* 正文标题 / 字号 */
+  .vp-doc h1 { font-size: 26px; }
+  .vp-doc h2 { font-size: 22px; padding-top: 20px; margin-top: 32px; }
+  .vp-doc h3 { font-size: 18px; margin-top: 24px; }
+  .vp-doc p, .vp-doc ul, .vp-doc ol { font-size: 15px; line-height: 1.75; }
+
+  /* 顶部导航：搜索框在手机上是图标按钮，主题背景保持一致 */
+  .VPNavBar .container { padding: 0 16px; }
+}
+
+/* ---------- 小屏手机（≤ 480px） ---------- */
+@media (max-width: 480px) {
+
+  .VPHero .heading .name,
+  .VPHero .heading .text {
+    font-size: 28px;
+  }
+  .VPHero .tagline {
+    font-size: 15px;
+  }
+  .VPHero .image {
+    max-width: 180px;
+  }
+  .VPHero .image-container {
+    width: 150px;
+    height: 150px;
+  }
+
+  /* 按钮全宽，方便拇指点击 */
+  .VPHero .actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .VPHero .action {
+    width: 100%;
+  }
+  .VPHero .VPButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .home-content { padding: 0 16px; }
+
+  /* 首页 features box 圆角柔和一点 */
+  .VPFeature .box {
+    padding: 18px 16px;
+    border-radius: 12px;
+  }
+}
+
+/* ---------- iOS Safari 手势区安全边距 & 大屏 iPad 优化 ---------- */
+@supports (padding: max(0px)) {
+  .VPNavBar .container,
+  .VPContent,
+  .home-content {
+    padding-left:  max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+/* 触屏设备：去掉 hover 时略突兀的行高亮，改为轻点击反馈 */
+@media (hover: none) {
+  .vp-doc table tbody tr:hover td { background: transparent; }
+  .vp-doc table tbody tr:active td { background: var(--vp-c-brand-soft); }
+}
