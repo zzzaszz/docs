@@ -52,7 +52,7 @@ export default defineConfig({
   cleanUrls: true,
 
   head: [
-    ['link', { rel: 'icon', href: '/doc/favicon.ico' }]
+    ['link', { rel: 'icon', href: '/docs/favicon.ico' }]
   ],
 
   markdown: {
