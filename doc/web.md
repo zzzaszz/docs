@@ -116,3 +116,15 @@ this.$options.filters.dateFormat(row[item.itemcode]);
         :virtual-scroll-option="virtualScrollOption"
       />
 ```
+## package组件库测试，使用本地
+```
+  "dependencies": {
+
+    "@inksyun/utils": "file:D:/0-caoshi/0-Web_Code/web2/inksnpm/inkscommon/inksutils",
+
+    "@inksyun/webcomp": "1.2.46",
+
+    "@jiaminghi/data-view": "2.10.0",
+
+    "@wangeditor/editor": "5.1.23",
+```
