@@ -1,16 +1,16 @@
 ---
 layout: home
 
-title: ZZZ 技术文档
+title: CAOSHI 技术文档
 titleTemplate: Java / Vue / SQL 笔记
 
 hero:
-  name: ZZZ 技术文档
+  name: CAOSHI 技术文档
   text: 前端 · 后端 · 数据库
   tagline: 平时写代码时随手记的东西，方便自己回头查
   image:
     src: /logo.svg
-    alt: ZZZ Docs
+    alt: CAOSHI Docs
   actions:
     - theme: brand
       text: 开始阅读

@@ -44,7 +44,7 @@ function autoSidebar(mdRelPath: string, groupText: string) {
 
 export default defineConfig({
 
-  title: 'ZZZ 技术文档',
+  title: 'CAOSHI 技术文档',
   description: 'Java / Vue / SQL 学习笔记',
   base: '/doc/',
   lang: 'zh-CN',
