@@ -95,7 +95,11 @@ export default defineConfig({
             { text: '时区转换',      link: '/tools/timezone' },
             { text: '时间戳转换',    link: '/tools/timestamp' },
             { text: 'JSON 格式化',   link: '/tools/json' },
-            { text: '图片 ↔ Base64', link: '/tools/image-base64' }
+            { text: '图片 ↔ Base64', link: '/tools/image-base64' },
+            { text: '二维码',        link: '/tools/qrcode' },
+            { text: '图片格式转换',  link: '/tools/image-convert' },
+            { text: 'URL / Base64',  link: '/tools/url-base64' },
+            { text: 'UUID / 哈希 / JWT', link: '/tools/uuid-hash-jwt' }
           ]
         }
       ]

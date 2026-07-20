@@ -3,7 +3,7 @@ title: JSON 格式化
 outline: false
 ---
 
-# 🧾 JSON 格式化（任性模式）
+# 🧾 JSON 格式化
 
 不严格按 JSON 规范，日常从代码里拷贝出来的乱七八糟数据基本都能吃：
 

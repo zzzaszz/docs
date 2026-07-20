@@ -37,8 +37,36 @@ const tools: Tool[] = [
     desc: '拖拽 / 粘贴图片转 Base64；也能把 Base64 还原成图片并下载',
     link: '/tools/image-base64',
     tag: '编码'
+  },
+  {
+    icon: '🔳',
+    title: '二维码',
+    desc: '文本 / URL 生成二维码，可自定义颜色与容错；也能识别二维码图片',
+    link: '/tools/qrcode',
+    tag: '图像'
+  },
+  {
+    icon: '🎨',
+    title: '图片格式转换',
+    desc: 'PNG / JPG / WebP / BMP 互转，支持批量、质量与缩放调节',
+    link: '/tools/image-convert',
+    tag: '图像'
+  },
+  {
+    icon: '🔗',
+    title: 'URL / Base64 文本',
+    desc: 'URL 编解码、Base64 文本互转（UTF-8 安全，支持 URL-Safe 变体）',
+    link: '/tools/url-base64',
+    tag: '编码'
+  },
+  {
+    icon: '🆔',
+    title: 'UUID / 哈希 / JWT',
+    desc: 'UUID v4/v7 & NanoID 批量生成、MD5/SHA 家族哈希、JWT 解析',
+    link: '/tools/uuid-hash-jwt',
+    tag: '安全'
   }
-  // 后续继续往这里加：URL 编解码、Base64、正则测试、UUID、颜色转换、Diff、SQL 格式化……
+  // 后续继续往这里加：正则测试、颜色转换、Diff、SQL 格式化、Cron 表达式……
 ]
 </script>
 

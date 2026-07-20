@@ -4,3 +4,16 @@
 .obsidian/workspace-mobile.json
 .trash/
 node_modules
+
+# VitePress 构建产物 & 缓存 —— 不上传
+.vitepress/dist/
+.vitepress/cache/
+
+# 本地环境
+.env
+.env.local
+
+# 系统 / 编辑器杂项
+.DS_Store
+Thumbs.db
+*.log
