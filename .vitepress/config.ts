@@ -46,10 +46,11 @@ export default defineConfig({
 
   title: 'CAOSHI 技术文档',
   description: 'Java / Vue / SQL 学习笔记',
-  base: '/doc/',
+  base: '/docs/',
   lang: 'zh-CN',
   lastUpdated: true,
-  cleanUrls: true,
+  // GitHub Pages 不支持无扩展名路由，关掉 cleanUrls，让链接带 .html
+  cleanUrls: false,
 
   head: [
     ['link', { rel: 'icon', href: '/docs/favicon.ico' }]

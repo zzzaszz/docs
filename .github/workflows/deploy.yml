@@ -34,6 +34,10 @@ jobs:
       - name: Build
         run: pnpm docs:build
 
+      # GitHub Pages 默认走 Jekyll，会忽略 _ 开头的文件；加 .nojekyll 关掉
+      - name: Add .nojekyll
+        run: touch .vitepress/dist/.nojekyll
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
