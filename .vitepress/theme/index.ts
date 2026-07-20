@@ -9,6 +9,7 @@ import JsonFormatterTool from './components/JsonFormatterTool.vue'
 import ImageBase64Tool from './components/ImageBase64Tool.vue'
 import QrCodeTool from './components/QrCodeTool.vue'
 import ImageConvertTool from './components/ImageConvertTool.vue'
+import ImageCompressTool from './components/ImageCompressTool.vue'
 import UrlBase64Tool from './components/UrlBase64Tool.vue'
 import UuidHashJwtTool from './components/UuidHashJwtTool.vue'
 
@@ -22,6 +23,7 @@ export default {
     app.component('ImageBase64Tool', ImageBase64Tool)
     app.component('QrCodeTool', QrCodeTool)
     app.component('ImageConvertTool', ImageConvertTool)
+    app.component('ImageCompressTool', ImageCompressTool)
     app.component('UrlBase64Tool', UrlBase64Tool)
     app.component('UuidHashJwtTool', UuidHashJwtTool)
   }

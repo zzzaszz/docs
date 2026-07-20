@@ -53,6 +53,13 @@ const tools: Tool[] = [
     tag: '图像'
   },
   {
+    icon: '📦',
+    title: '图片容量压缩',
+    desc: '按质量或按目标大小压缩，二分法自动逼近目标 KB',
+    link: '/tools/image-compress',
+    tag: '图像'
+  },
+  {
     icon: '🔗',
     title: 'URL / Base64 文本',
     desc: 'URL 编解码、Base64 文本互转（UTF-8 安全，支持 URL-Safe 变体）',

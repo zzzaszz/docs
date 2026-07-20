@@ -98,6 +98,7 @@ export default defineConfig({
             { text: '图片 ↔ Base64', link: '/tools/image-base64' },
             { text: '二维码',        link: '/tools/qrcode' },
             { text: '图片格式转换',  link: '/tools/image-convert' },
+            { text: '图片容量压缩',  link: '/tools/image-compress' },
             { text: 'URL / Base64',  link: '/tools/url-base64' },
             { text: 'UUID / 哈希 / JWT', link: '/tools/uuid-hash-jwt' }
           ]
