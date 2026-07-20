@@ -1,0 +1,64 @@
+/**
+ * 柔和淡绿主题
+ * 覆盖 VitePress 默认 CSS 变量，全站自动生效
+ * 参考色系：sage / mint，避开亮眼的荧光绿
+ */
+
+:root {
+  /* 主色（品牌色）——柔和的鼠尾草绿 */
+  --vp-c-brand-1: #6b9e7f;          /* 主要：链接、按钮文字（浅色模式下需保证可读性） */
+  --vp-c-brand-2: #7fb094;          /* hover */
+  --vp-c-brand-3: #8fbfa4;          /* 按钮背景 */
+  --vp-c-brand-soft: #e6f0ea;       /* 淡底色：代码块内联、标签背景 */
+
+  /* 兼容旧变量名 */
+  --vp-c-brand: var(--vp-c-brand-1);
+  --vp-c-brand-light: var(--vp-c-brand-2);
+  --vp-c-brand-lighter: var(--vp-c-brand-3);
+  --vp-c-brand-dark: #558a68;
+  --vp-c-brand-darker: #446f53;
+
+  /* 首页 hero 名称的渐变文字 */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #6b9e7f 30%, #a8cdb6);
+
+  /* 首页 hero 图片的光晕 */
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, #b8d8c4 50%, #d9ead1 50%);
+  --vp-home-hero-image-filter: blur(48px);
+
+  /* 按钮主色 */
+  --vp-button-brand-border: var(--vp-c-brand-2);
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-border: var(--vp-c-brand-2);
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-border: var(--vp-c-brand-1);
+  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-active-bg: var(--vp-c-brand-dark);
+
+  /* 自定义容器（tip） */
+  --vp-custom-block-tip-border: var(--vp-c-brand-soft);
+  --vp-custom-block-tip-text: var(--vp-c-brand-dark);
+  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
+
+  /* 页面整体背景稍微带一点绿意，避免纯白显得冷 */
+  --vp-c-bg: #fbfdfb;
+  --vp-c-bg-alt: #f4f8f5;
+}
+
+/* 深色模式：降低饱和，避免夜里刺眼 */
+.dark {
+  --vp-c-brand-1: #9ec7ac;
+  --vp-c-brand-2: #a8cdb6;
+  --vp-c-brand-3: #7fb094;
+  --vp-c-brand-soft: rgba(158, 199, 172, 0.14);
+  --vp-c-brand-dark: #7fb094;
+  --vp-c-brand-darker: #6b9e7f;
+
+  --vp-home-hero-name-background: linear-gradient(120deg, #9ec7ac 30%, #cfe4d6);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, #4a6b56 50%, #2f4a3a 50%);
+
+  --vp-c-bg: #121513;
+  --vp-c-bg-alt: #181c19;
+}
