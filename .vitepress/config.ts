@@ -94,7 +94,8 @@ export default defineConfig({
             { text: '工具总览',      link: '/tools/' },
             { text: '时区转换',      link: '/tools/timezone' },
             { text: '时间戳转换',    link: '/tools/timestamp' },
-            { text: 'JSON 格式化',   link: '/tools/json' }
+            { text: 'JSON 格式化',   link: '/tools/json' },
+            { text: '图片 ↔ Base64', link: '/tools/image-base64' }
           ]
         }
       ]

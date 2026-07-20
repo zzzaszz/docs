@@ -30,6 +30,13 @@ const tools: Tool[] = [
     desc: '容错解析 —— 单引号、注释、尾逗号、无引号 key 都能处理',
     link: '/tools/json',
     tag: '文本'
+  },
+  {
+    icon: '🖼️',
+    title: '图片 ↔ Base64',
+    desc: '拖拽 / 粘贴图片转 Base64；也能把 Base64 还原成图片并下载',
+    link: '/tools/image-base64',
+    tag: '编码'
   }
   // 后续继续往这里加：URL 编解码、Base64、正则测试、UUID、颜色转换、Diff、SQL 格式化……
 ]
