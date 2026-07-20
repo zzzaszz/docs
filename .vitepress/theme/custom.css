@@ -42,9 +42,101 @@
   --vp-custom-block-tip-text: var(--vp-c-brand-dark);
   --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
 
-  /* 页面整体背景稍微带一点绿意，避免纯白显得冷 */
-  --vp-c-bg: #fbfdfb;
-  --vp-c-bg-alt: #f4f8f5;
+  /* 页面整体柔和淡绿背景（比纯白更耐看） */
+  --vp-c-bg: #f4f9f5;
+  --vp-c-bg-alt: #eaf2ec;
+  --vp-c-bg-soft: #eef5f0;
+}
+
+/* 首页 features 下方内容（快速导航等）与 hero / features 对齐 */
+.home-content {
+  max-width: 1152px;
+  margin: 3rem auto 0;
+  padding: 0 24px;
+}
+@media (min-width: 640px) {
+  .home-content { padding: 0 48px; }
+}
+@media (min-width: 960px) {
+  .home-content { padding: 0 64px; }
+}
+
+/* ----------- 表格（快速导航等） ----------- */
+.vp-doc table {
+  display: table;                   /* 默认是 block，撑不满宽度；改为 table 才能配合 width:100% */
+  width: 100%;
+  margin: 20px 0;
+  background: #ffffff;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #dbe8de;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(107, 158, 127, 0.06);
+  font-size: 15px;
+}
+.vp-doc table th,
+.vp-doc table td {
+  padding: 14px 20px;
+  border: none;
+  border-bottom: 1px solid #eaf2ec;
+  text-align: left;
+  vertical-align: middle;
+}
+.vp-doc table thead th {
+  background: #eaf3ec;
+  color: #446f53;
+  font-weight: 600;
+  border-bottom: 1px solid #d3e4d8;
+}
+.vp-doc table tbody tr:last-child td { border-bottom: none; }
+.vp-doc table tbody tr:hover td { background: #f4f9f5; }
+
+/* ----------- 代码块 ----------- */
+.vp-doc div[class*='language-'] {
+  background: #ffffff;
+  border: 1px solid #dbe8de;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(107, 158, 127, 0.06);
+  margin: 20px 0;
+  overflow: hidden;
+}
+/* 语言标签（右上角 bash / js 等） */
+.vp-doc div[class*='language-']::before {
+  color: #8aa696;
+  font-weight: 500;
+  padding: 10px 14px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+/* 代码本体：稍加内边距、字体更等宽舒适 */
+.vp-doc div[class*='language-'] pre {
+  padding: 18px 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.vp-doc div[class*='language-'] code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas,
+               'Courier New', monospace;
+}
+/* 行号列 */
+.vp-doc .line-numbers-wrapper {
+  padding-top: 18px;
+  color: #b8ccbf;
+  border-right: 1px solid #eef5f0;
+}
+/* 复制按钮悬停成主题色 */
+.vp-doc [class*='language-'] > button.copy:hover {
+  border-color: var(--vp-c-brand-2);
+  background-color: var(--vp-c-brand-soft);
+}
+/* 行内 code */
+.vp-doc :not(pre) > code {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-dark);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.9em;
 }
 
 /* 深色模式：降低饱和，避免夜里刺眼 */
@@ -61,4 +153,33 @@
 
   --vp-c-bg: #121513;
   --vp-c-bg-alt: #181c19;
+}
+
+/* ----------- 深色模式：表格 / 代码块 ----------- */
+.dark .vp-doc table {
+  background: var(--vp-c-bg-alt);
+  border-color: #2a352d;
+  box-shadow: none;
+}
+.dark .vp-doc table th,
+.dark .vp-doc table td { border-bottom-color: #26302a; }
+.dark .vp-doc table thead th {
+  background: #1e2620;
+  color: #a8cdb6;
+  border-bottom-color: #2a352d;
+}
+.dark .vp-doc table tbody tr:hover td { background: #1c2320; }
+
+.dark .vp-doc div[class*='language-'] {
+  background: var(--vp-c-bg-alt);
+  border-color: #2a352d;
+  box-shadow: none;
+}
+.dark .vp-doc .line-numbers-wrapper {
+  color: #4a5a4f;
+  border-right-color: #26302a;
+}
+.dark .vp-doc :not(pre) > code {
+  background: var(--vp-c-brand-soft);
+  color: #a8cdb6;
 }

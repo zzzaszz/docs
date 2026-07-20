@@ -1,4 +1,46 @@
 import { defineConfig } from 'vitepress'
+import fs from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+/**
+ * 生成与 VitePress 默认 anchor 相同的 slug
+ * 规则：转小写 → 去掉除中英文数字空格连字符外的字符 → 空格转为连字符
+ */
+function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+/**
+ * 扫描 md 文件里的 ## 标题，自动生成侧边栏 items
+ * 会跳过代码块内的 ## 干扰
+ */
+function autoSidebar(mdRelPath: string, groupText: string) {
+  const abs = resolve(__dirname, '..', mdRelPath)
+  const src = fs.readFileSync(abs, 'utf-8')
+  const items: { text: string; link: string }[] = []
+  const linkBase = '/' + mdRelPath.replace(/\.md$/, '')
+
+  let inCode = false
+  for (const raw of src.split(/\r?\n/)) {
+    if (/^\s*```/.test(raw)) { inCode = !inCode; continue }
+    if (inCode) continue
+    const m = /^##\s+(.+?)\s*#*\s*$/.exec(raw)
+    if (m) {
+      const text = m[1].trim()
+      items.push({ text, link: `${linkBase}#${slugify(text)}` })
+    }
+  }
+  return [{ text: groupText, collapsed: false, items }]
+}
 
 export default defineConfig({
 
@@ -32,88 +74,12 @@ export default defineConfig({
       { text: '相关问题', link: '/doc/question' }
     ],
 
-    // 左侧目录
+    // 左侧目录 —— 自动扫描 md 里的 ## 标题
     sidebar: {
-
-      '/doc/web': [
-        {
-          text: '前端',
-          collapsed: false,
-          items: [
-            { text: 'Volta 固定项目 Node 版本', link: '/doc/web#volta-固定项目-node-版本' },
-            { text: 'npm ci', link: '/doc/web#npm-ci' },
-            { text: '对象去除某 key', link: '/doc/web#对象去除某-key' },
-            { text: '后端传回 JSON 格式化为数组', link: '/doc/web#后端传回-json-格式化为数组' },
-            { text: '将 JSON 格式化为 String 传给后端', link: '/doc/web#将-json-格式化为-string-传给后端' },
-            { text: 'Inks 封装好的格式化时间方法', link: '/doc/web#inks-封装好的格式化时间方法' },
-            { text: 'CSS Flex 同一行布局', link: '/doc/web#css-flex-同一行布局' },
-            { text: 'easytable 高度问题', link: '/doc/web#easytable高度问题' }
-          ]
-        }
-      ],
-
-      '/doc/svc': [
-        {
-          text: '后端',
-          collapsed: false,
-          items: [
-            { text: 'Optional 处理 null', link: '/doc/svc#optional-工具处理-null' },
-            { text: 'StringUtils 处理 String', link: '/doc/svc#stringutils-工具处理-string' },
-            { text: 'EasyPOI 导出 Excel', link: '/doc/svc#easypoi-导出-excel' },
-            { text: '跨域配置', link: '/doc/svc#跨域配置' },
-            { text: 'BeanUtils 拷贝对象过滤 null', link: '/doc/svc#beanutils-拷贝对象过滤-null' },
-            { text: 'DTO/VO 差分', link: '/doc/svc#dto-vo-差分' },
-            { text: 'SpringBoot 相关通用', link: '/doc/svc#springboot-相关通用' },
-            { text: 'JSON 序列化时字段是否输出', link: '/doc/svc#json-序列化时字段是否输出' },
-            { text: '@RequestParam 注解', link: '/doc/svc#requestparam-注解' },
-            { text: 'Mapper 层 @Param 注解', link: '/doc/svc#mapper-层-param-注解' },
-            { text: 'JAVA 发送 HTTP 请求', link: '/doc/svc#java-发送-http-请求' },
-            { text: 'Stream 函数式写法', link: '/doc/svc#java-函数式编程-stream-写法举例' },
-            { text: 'JAVA JSON 拆分', link: '/doc/svc#java-json-拆分' },
-            { text: 'SpringUtil 说明使用', link: '/doc/svc#springutil-说明使用' },
-            { text: '线程的基础使用方式', link: '/doc/svc#线程的基础使用方式' },
-            { text: 'Lambda 基础使用示例', link: '/doc/svc#lambda-表达式基础使用示例' },
-            { text: 'Java 时间方法总结', link: '/doc/svc#java-中各个时间方法总结' },
-            { text: 'Map 的常见方法', link: '/doc/svc#map-的常见方法' },
-            { text: 'str 字符串分隔改为数组', link: '/doc/svc#str字符串分隔改为数组' }
-          ]
-        }
-      ],
-
-      '/doc/other': [
-        {
-          text: 'DB / 其他',
-          collapsed: false,
-          items: [
-            { text: 'Linux 相关', link: '/doc/other#linux-相关' },
-            { text: '端口杀查', link: '/doc/other#端口杀查' },
-            { text: '递归处理父 ID', link: '/doc/other#常用递归处理父-id' },
-            { text: 'MySQL IFNULL / COALESCE / NULLIF', link: '/doc/other#mysql-ifnull-coalesce-nullif' },
-            { text: 'MySQL 判断日期在今天', link: '/doc/other#mysql-判断日期在今天' },
-            { text: 'MySQL 数字转字符', link: '/doc/other#mysql-将数字转为字符' },
-            { text: 'MySQL 常用命令', link: '/doc/other#mysql-常用命令' },
-            { text: 'MySQL 字段格式不统一导致索引失效', link: '/doc/other#mysql-字段格式不统一导致索引失效' },
-            { text: 'MySQL EXPLAIN 查看 SQL 性能', link: '/doc/other#mysql-explain-查看-sql-性能' },
-            { text: '联合索引', link: '/doc/other#联合索引' },
-            { text: 'MySQL 排查线程/锁/索引', link: '/doc/other#mysql-排查线程-锁-索引' },
-            { text: 'Git 重新关联仓库', link: '/doc/other#git-重新关联仓库' },
-            { text: 'git 单独代理', link: '/doc/other#git单独代理' }
-          ]
-        }
-      ],
-
-      '/doc/question': [
-        {
-          text: '相关问题',
-          collapsed: false,
-          items: [
-            { text: '老版本 SQL Server 连接问题', link: '/doc/question#老版本-sql-server-连接问题' },
-            { text: '后端大量数据处理（MyBatis BATCH）', link: '/doc/question#后端大量数据处理方案-mybatis-batch-模式' },
-            { text: '后端中等数据更新（CASE WHEN）', link: '/doc/question#后端中等数据更新处理方案-case-when-批量更新' },
-            { text: 'Redis 按半小时构建预警列表', link: '/doc/question#redis-按半小时构建每天的预警列表' }
-          ]
-        }
-      ]
+      '/doc/web':      autoSidebar('doc/web.md',      '前端'),
+      '/doc/svc':      autoSidebar('doc/svc.md',      '后端'),
+      '/doc/other':    autoSidebar('doc/other.md',    'DB / 其他'),
+      '/doc/question': autoSidebar('doc/question.md', '相关问题')
     },
 
     // 右侧大纲

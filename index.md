@@ -45,7 +45,7 @@ features:
     linkText: 问题记录
 ---
 
-<div class="vp-doc" style="max-width:960px;margin:3rem auto 0;padding:0 24px;">
+<div class="home-content vp-doc">
 
 ## 快速导航
 
