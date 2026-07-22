@@ -1132,3 +1132,14 @@ try {
 ```
 ---
 ##### 2. `@After` 后置通知
+无论是否成功异常都会进入，常用于清理资源、释放锁、关闭资源
+
+---
+##### `3、@AfterReturning` 返回通知
+只有成功后会进入，比如throw new Exception()后 不进入
+```java
+@AfterReturning( pointcut="controllerLayer()", returning="result" ) 
+public void afterReturning(Object result){ 
+System.out.println(result); 
+}
+```
