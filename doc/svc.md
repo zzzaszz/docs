@@ -1056,3 +1056,19 @@ if (idStr != null && !idStr.isEmpty()) {
 }  
 return matGoodsMapper.getListByIdsBatch(ids, tid);
 ```
+## AOP相关
+#### 1、切点说明，execution表示按照方法匹配
+常见可选 
+execution()  execution( 修饰符 返回值 包.类.方法(参数) )
+within()  根据类/包匹配
+@annotation() 
+args()
+
+
+```java
+/** 切点：所有 controller 包下的 public 方法 */ 
+// 切点表达式， 定义哪些方法需要被拦截
+@Pointcut("execution(public * zzz.service.forum.controller..*.*(..))")  
+public void controllerLayer() {  
+}
+```
