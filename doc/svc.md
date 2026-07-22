@@ -1090,6 +1090,28 @@ public void controllerLayer() {
 }
 ```
 上述表达式是指：拦截 zzz.service.forum.controller 包及其子包下面所有 Controller 类的所有 public 方法，无论返回值和参数。
-controllerLayer方法相当于定义了一种类型，下方为使用  
+
+**controllerLayer**方法相当于定义了一种类型，下方为使用  
+```java
 @Around("controllerLayer()")  
 public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+
+try {  
+    return joinPoint.proceed();  
+} finally {  
+    UserContext.clear();  
+}
+
+}
+```
+---
+#### 通知类型（Advice）的区分
+常见的通知类型（Advice）主要有 **5 种**：
+
+|类型|注解|执行时机|是否能阻止目标方法执行|是否能获取返回值|是否能捕获异常|
+|---|---|---|---|---|---|
+|前置通知|`@Before`|目标方法执行**之前**|❌ 可以抛异常阻止|❌|❌|
+|后置通知|`@After`|目标方法执行**之后**（无论成功失败）|❌|❌|❌|
+|返回通知|`@AfterReturning`|目标方法**正常返回之后**|❌|✅|❌|
+|异常通知|`@AfterThrowing`|目标方法**抛异常之后**|❌|❌|✅|
+|环绕通知|`@Around`|包围目标方法执行（前后都有）|✅|✅|✅|
