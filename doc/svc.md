@@ -1164,6 +1164,13 @@ public void error(Exception e){
 ```
 ---
 ##### 5、`@Around` 环绕通知
+joinPoint.proceed();为方法执行，常用场景：登录鉴权、接口耗时统计、事务控制、缓存处理
 ```java
-@Around("controllerLayer()") public Object around( ProceedingJoinPoint joinPoint ) throws Throwable { System.out.println("执行前"); Object result = joinPoint.proceed(); System.out.println("执行后"); return result; }
+@Around("controllerLayer()") 
+public Object around( ProceedingJoinPoint joinPoint ) throws Throwable { 
+	System.out.println("执行前"); 
+	Object result = joinPoint.proceed();
+	System.out.println("执行后"); 
+	return result; 
+}
 ```
