@@ -1080,6 +1080,8 @@ public User getUser(){
 **args()** 根据方法参数类型匹配，比如@Pointcut("args(User,String)") public void userParam(){}
 用于匹配参数是User的方法，比如public void save(User user,String name)
 
+---
+
 ```java
 /** 切点：所有 controller 包下的 public 方法 */ 
 // 切点表达式， 定义哪些方法需要被拦截
@@ -1097,6 +1099,7 @@ public void controllerLayer() {
 public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
 try {  
+//执行原方法
     return joinPoint.proceed();  
 } finally {  
     UserContext.clear();  
@@ -1108,10 +1111,24 @@ try {
 #### 通知类型（Advice）的区分
 常见的通知类型（Advice）主要有 **5 种**：
 
-|类型|注解|执行时机|是否能阻止目标方法执行|是否能获取返回值|是否能捕获异常|
-|---|---|---|---|---|---|
-|前置通知|`@Before`|目标方法执行**之前**|❌ 可以抛异常阻止|❌|❌|
-|后置通知|`@After`|目标方法执行**之后**（无论成功失败）|❌|❌|❌|
-|返回通知|`@AfterReturning`|目标方法**正常返回之后**|❌|✅|❌|
-|异常通知|`@AfterThrowing`|目标方法**抛异常之后**|❌|❌|✅|
-|环绕通知|`@Around`|包围目标方法执行（前后都有）|✅|✅|✅|
+| 类型   | 注解                | 执行时机                 | 是否能阻止目标方法执行 | 是否能获取返回值 | 是否能捕获异常 |
+| ---- | ----------------- | -------------------- | ----------- | -------- | ------- |
+| 前置通知 | `@Before`         | 目标方法执行**之前**         | ❌ 可以抛异常阻止   | ❌        | ❌       |
+| 后置通知 | `@After`          | 目标方法执行**之后**（无论成功失败） | ❌           | ❌        | ❌       |
+| 返回通知 | `@AfterReturning` | 目标方法**正常返回之后**       | ❌           | ✅        | ❌       |
+| 异常通知 | `@AfterThrowing`  | 目标方法**抛异常之后**        | ❌           | ❌        | ✅       |
+| 环绕通知 | `@Around`         | 包围目标方法执行（前后都有）       | ✅           | ✅        | ✅       |
+##### 1. `@Before` 前置通知
+执行目标方法之前调用。
+不能拿到：
+- 返回值
+- 异常信息
+但是可以：
+- 获取方法名
+- 获取参数
+比如joinPoint.getSignature().getName();，常用于权限检查、参数校验、请求日志
+```java
+@Before("controllerLayer()") public void before(JoinPoint joinPoint) { System.out.println("方法执行前"); }
+```
+---
+##### 2. `@After` 后置通知
