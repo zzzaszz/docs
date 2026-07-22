@@ -1059,10 +1059,27 @@ return matGoodsMapper.getListByIdsBatch(ids, tid);
 ## AOP相关
 #### 1、切点说明，execution表示按照方法匹配
 常见可选 
-execution()  execution( 修饰符 返回值 包.类.方法(参数) )
-within()  根据类/包匹配
-@annotation() 
-args()
+**execution()**  execution( 修饰符 返回值 包.类.方法(参数) )
+**within()**  根据类/包匹配，比如@Pointcut("within(com.xxx.service..*)")下面所有类的所有方法
+**@annotation()**  被某个注解标记的方法 ，常是用于权限，日志
+```java
+//定义
+@Target(ElementType.METHOD) @Retention(RetentionPolicy.RUNTIME) public @interface LoginCheck { }
+
+//使用
+@LoginCheck
+public User getUser(){
+
+}
+
+//AOP
+@Pointcut("@annotation(com.xxx.LoginCheck)") public void loginCheck(){}
+
+
+```
+**args()** 根据方法参数类型匹配，比如@Pointcut("args(User,String)") public void userParam(){}
+用于匹配参数是User的方法，比如public void save(User user,String name)
+
 
 
 ```java
