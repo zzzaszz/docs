@@ -1080,12 +1080,16 @@ public User getUser(){
 **args()** 根据方法参数类型匹配，比如@Pointcut("args(User,String)") public void userParam(){}
 用于匹配参数是User的方法，比如public void save(User user,String name)
 
-
-
 ```java
 /** 切点：所有 controller 包下的 public 方法 */ 
 // 切点表达式， 定义哪些方法需要被拦截
+// 第一个*表示返回任意值，后续是包路径，两个点表示匹配下面的任意子包
+// 双.后面的*表示任意类名，.*表示方法名，(..)表示任意参数
 @Pointcut("execution(public * zzz.service.forum.controller..*.*(..))")  
 public void controllerLayer() {  
 }
 ```
+上述表达式是指：拦截 zzz.service.forum.controller 包及其子包下面所有 Controller 类的所有 public 方法，无论返回值和参数。
+controllerLayer方法相当于定义了一种类型，下方为使用  
+@Around("controllerLayer()")  
+public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
