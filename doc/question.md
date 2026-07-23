@@ -425,3 +425,29 @@ public class AuthAspect {
     }  
 }
 ```
+---
+## 根据排程倒排计划日期
+```java
+if (Objects.equals(wipgroupPojo.getDaytype(), 1)) {  
+    // 后续工序累计天数  
+    int totalAfterDays = 0;  
+    // 从最后一道工序开始倒排  
+    for (int i = itemList.size() - 1; i >= 0; i--) {  
+        WkWipnoteitemPojo item = itemList.get(i);  
+        Integer wkday = 0;  
+        if (StringUtils.isNotBlank(item.getWpid()) && wpidToWkdayMap.containsKey(item.getWpid())) {  
+            wkday = wpidToWkdayMap.get(item.getWpid());  
+            if (wkday == null) {  
+                wkday = 0;  
+            }  
+        }  
+        // 当前工序计划日期 = 主计划日期 - 当前工序及后续工序总耗时  
+        Calendar calendar = Calendar.getInstance();  
+        calendar.setTime(mainPlanDate);  
+        calendar.add(Calendar.DAY_OF_MONTH, -(totalAfterDays + wkday));  
+        item.setPlandate(calendar.getTime());  
+        // 累加当前工序耗时，给前一道工序使用  
+        totalAfterDays += wkday;  
+    }  
+}
+```
