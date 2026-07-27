@@ -505,9 +505,21 @@ remain left 剩余
 condition、criteria 条件
 range 范围
 exclude 排除
-
-
-
+Turnover 营业额、周转
+contributor 贡献者
+collaborator 协作者
+hardware 硬件
+partition 分区
+protocol 协议
+authentication 认证
+authorization 授权
+endpoint 接口地址
+interface 接口
+payload 请求数据
+schema 结构
+serialize/deserialize 序列化/反序列化
+constraint 约束
+aggregate 聚合
 
 
 
