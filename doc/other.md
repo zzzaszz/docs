@@ -289,7 +289,7 @@ SELECT trx_mysql_thread_id, trx_started, trx_state, trx_query
 FROM information_schema.innodb_trx;
 ```
 
-### 查看 InnoDB 锁信息
+#### 查看 InnoDB 锁信息
 
 ```sql
 SHOW ENGINE INNODB STATUS\G
@@ -306,7 +306,7 @@ SHOW ENGINE INNODB STATUS\G
 | LOCK WAIT | 是否存在等待 |
 | DEADLOCK | 是否发生死锁 |
 
-### 结束线程
+#### 结束线程
 
 ```sql
 -- 仅终止当前 SQL（连接保留）
@@ -316,7 +316,7 @@ KILL QUERY 316017;
 KILL 316017;
 ```
 
-### 查看索引
+#### 查看索引
 
 ```sql
 -- 查看表的索引
@@ -350,20 +350,20 @@ ANALYZE TABLE Bus_Machining;
 > 意味着：全表扫描，大表容易导致长事务、锁等待、死锁。
 
 ---
-
-## Git 重新关联仓库
+## GIT相关
+### Git 重新关联仓库
 
 ```bash
 git remote set-url origin https://github.com/新用户名/docs.git
 ```
-## Git将文件移出暂存区
+### Git将文件移出暂存区
 ```git
 git restore --staged 文件名
 
 //移入暂存区
 git restore --tracked 文件名
 ```
-## Git撤销本地提交、撤销推送
+### Git撤销本地提交、撤销推送
 ```git
 //撤销本地提交
 git reset --soft HEAD~1
@@ -371,7 +371,7 @@ git reset --soft HEAD~1
 git revert HEAD
 
 ```
-## Git单独代理
+### Git单独代理
 ```bash
 git config --local http.https://github.com.proxy http://127.0.0.1:7890
 
@@ -379,7 +379,8 @@ git config --local --unset http.proxy
 git config --local --unset https.proxy
 ```
 
-## YAML部署docker配置信息
+## 部署相关
+### YAML部署docker配置信息
 ```yaml
 networks:
   sa-network:
@@ -456,7 +457,7 @@ services:
     networks:
       - sa-network               
 ```
-# EN名词
+## EN名词
 ```
 shortage 短缺
 lack 缺席
@@ -521,8 +522,8 @@ Procedure、Program 程序
 
 
 ```
-# 算法相关
-## 链表
+## 算法相关
+### 链表
 ```
 
 
