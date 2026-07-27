@@ -1,12 +1,13 @@
 # 其他
-## Linux 相关
+## OS相关
+### Linux 相关
 
 ```bash
 cd ~/.openclaw    # 快速进入目录
 pwd               # 打印当前完整路径
 ```
 
-## 端口杀查
+### 端口杀查
 
 ```bash
 # 端口查看
@@ -22,30 +23,7 @@ taskkill /F /PID 12345
 > `Shift + 空格` = 全半角切换
 
 ---
-
-## 常用递归处理父 ID
-
-### Java 实现
-
-```java
-if (StringUtils.isNotBlank(uidgroupguid)) {
-    List<MatGroupPojo> list = this.matGoodsService.getAllGroupGuid(loginUser.getTenantid());
-    HashSet<String> ids = new HashSet<>();
-    findChildren(uidgroupguid, list, ids);
-    qpfilter += " AND Mat_Goods.UidGroupGuid IN ('" + String.join("','", ids) + "')";
-}
-
-// 递归查所有子节点
-public void findChildren(String parentId, List<MatGroupPojo> list, Set<String> ids) {
-    ids.add(parentId);
-    for (MatGroupPojo group : list) {
-        if (parentId.equals(group.getParentid())) {
-            findChildren(group.getId(), list, ids);
-        }
-    }
-}
-```
-
+## DB相关
 ### MySQL 递归查询（WITH RECURSIVE）
 
 ```sql
@@ -74,7 +52,8 @@ LIMIT 20
 
 ---
 
-## MySQL IFNULL / COALESCE / NULLIF
+
+### MySQL IFNULL / COALESCE / NULLIF
 
 | 函数 | 说明 |
 |:---|:---|
@@ -92,7 +71,7 @@ SELECT COALESCE(phone, mobile, '无') FROM user;
 
 ---
 
-## MySQL 判断日期在今天
+### MySQL 判断日期在今天
 
 ```sql
 -- CURDATE() → 今天 00:00:00
@@ -105,7 +84,7 @@ AND Crm_Leads.CreateDate < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
 
 ---
 
-## MySQL 将数字转为字符
+### MySQL 将数字转为字符
 
 把 BigDecimal / 数值转成可控格式，防止 `0E-8`、科学计数法、小数位丢失：
 
@@ -115,8 +94,7 @@ CAST(Crm_Business.BillTaxAmount AS DECIMAL(18, 2)) AS BillTaxAmount
 
 ---
 
-## MySQL 常用命令
-
+### MySQL 常用命令
 ```sql
 -- 查看表结构
 SHOW CREATE TABLE App_Workgroup;
@@ -142,7 +120,7 @@ SHOW VARIABLES;
 
 ---
 
-## MySQL 字段格式不统一导致索引失效
+### MySQL 字段格式不统一导致索引失效
 
 > 比如主外键格式不同，一个是 `utf8mb4` 一个是 `utf8mb3`。
 
@@ -151,8 +129,7 @@ SHOW VARIABLES;
 > **推荐：** id 使用 `BIGINT` 主键，占用 8 字节，B+Tree 极小。
 
 ---
-
-## MySQL EXPLAIN 查看 SQL 性能
+### MySQL EXPLAIN 查看 SQL 性能
 
 ```sql
 EXPLAIN SELECT
@@ -237,9 +214,9 @@ LIMIT 10
 
 ---
 
-## 联合索引
+### 联合索引
 
-### 最左前缀原则
+#### 最左前缀原则
 
 1. 从左到右连续匹配
 2. 中间不能断
@@ -264,7 +241,7 @@ LIMIT 10
 | Tenantid + VirtualItem + ORDER BY GoodsState      | ✅                      |
 | GoodsName（无索引）                                    | ❌ 全表扫描，不走索引            |
 
-### 单列索引 vs 联合索引
+#### 单列索引 vs 联合索引
 
 | 维度 | 单列索引 | 联合索引 |
 |:---|:---|:---|
@@ -277,9 +254,9 @@ LIMIT 10
 
 ---
 
-## MySQL 排查线程、锁、索引
+### MySQL 排查线程、锁、索引
 
-### 查看所有线程（SHOW FULL PROCESSLIST）
+#### 查看所有线程（SHOW FULL PROCESSLIST）
 
 | 字段 | 说明 |
 |:---|:---|
@@ -298,7 +275,7 @@ SHOW FULL PROCESSLIST;
 
 > 如果查询为空（`Empty set`），说明当前没有活动事务。
 
-### 查看 InnoDB 事务
+#### 查看 InnoDB 事务
 
 | 字段 | 说明 |
 |:---|:---|
@@ -388,6 +365,10 @@ git restore --tracked 文件名
 ```
 ## Git撤销本地提交、撤销推送
 ```git
+//撤销本地提交
+git reset --soft HEAD~1
+//撤销远程，代码回滚
+git revert HEAD
 
 ```
 ## Git单独代理

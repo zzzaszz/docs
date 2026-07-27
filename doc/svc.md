@@ -1196,3 +1196,23 @@ public class WebSocketConfig implements WebSocketConfigurer {
     }  
 }
 ```
+## 常用递归处理父 ID
+
+```java
+if (StringUtils.isNotBlank(uidgroupguid)) {
+    List<MatGroupPojo> list = this.matGoodsService.getAllGroupGuid(loginUser.getTenantid());
+    HashSet<String> ids = new HashSet<>();
+    findChildren(uidgroupguid, list, ids);
+    qpfilter += " AND Mat_Goods.UidGroupGuid IN ('" + String.join("','", ids) + "')";
+}
+
+// 递归查所有子节点
+public void findChildren(String parentId, List<MatGroupPojo> list, Set<String> ids) {
+    ids.add(parentId);
+    for (MatGroupPojo group : list) {
+        if (parentId.equals(group.getParentid())) {
+            findChildren(group.getId(), list, ids);
+        }
+    }
+}
+```
