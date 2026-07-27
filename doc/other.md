@@ -464,6 +464,20 @@ services:
     networks:
       - sa-network               
 ```
+# En名词
+```
+shortage 短缺
+lack 缺席
+
+
+
+
+
+
+
+
+
+```
 # 算法相关
 ## 链表
 ```
