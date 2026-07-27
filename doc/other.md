@@ -468,9 +468,25 @@ services:
 ```
 shortage 短缺
 lack 缺席
-
-
-
+inactive 未激活
+valid/invalid 有/无效
+normal 正常
+un/available 可用
+pending 待处理
+processing 处理中
+cancelled 取消
+approve 审批
+audit 审核
+review 复核
+trigger 触发
+flow 流程
+category 分类
+order 顺序
+expireTime 过期时间
+effectiveDate 生效日期
+duration 持续时间
+permission 、authority 权限
+organization 组织
 
 
 
