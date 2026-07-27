@@ -520,9 +520,11 @@ schema 结构
 serialize/deserialize 序列化/反序列化
 constraint 约束
 aggregate 聚合
-
-
-
+fallback 降级
+architecture 架构
+extension 扩展
+resolve conflict 解决冲突
+Procedure、Program 程序
 
 
 
