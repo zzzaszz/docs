@@ -379,7 +379,18 @@ ANALYZE TABLE Bus_Machining;
 ```bash
 git remote set-url origin https://github.com/新用户名/docs.git
 ```
-## git单独代理
+## Git将文件移出暂存区
+```git
+git restore --staged 文件名
+
+//移入暂存区
+git restore --tracked 文件名
+```
+## Git撤销本地提交、撤销推送
+```git
+
+```
+## Git单独代理
 ```bash
 git config --local http.https://github.com.proxy http://127.0.0.1:7890
 
