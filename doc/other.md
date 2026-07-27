@@ -464,7 +464,7 @@ services:
     networks:
       - sa-network               
 ```
-# En名词
+# EN名词
 ```
 shortage 短缺
 lack 缺席
@@ -487,6 +487,27 @@ effectiveDate 生效日期
 duration 持续时间
 permission 、authority 权限
 organization 组织
+balance 余额
+available 可用
+freeze 冻结
+in/outbound 出入库
+manufacture 制造
+schedule 排程
+consume 消耗
+purchase 采购
+contract 合同
+finance 财务
+profit 利润
+income 收入
+expense 支出
+calculate 计算
+remain left 剩余
+condition、criteria 条件
+range 范围
+exclude 排除
+
+
+
 
 
 
