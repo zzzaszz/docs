@@ -1216,3 +1216,23 @@ public void findChildren(String parentId, List<MatGroupPojo> list, Set<String> i
     }
 }
 ```
+## Redisson redis锁的使用
+Redisson 是 Redis 官方推荐生态中的 Java 客户端之一，它对 Redis 进行了高级封装。
+- 加锁 解锁  锁续期  锁重入 锁竞争等待 异常释放
+```java
+<dependency> 
+	<groupId>org.redisson</groupId> 
+	<artifactId>
+		redisson-spring-boot-starter
+	</artifactId>
+	<version>3.27.2</version>
+</dependency>
+```
+Redisson 会自动读取 Spring Redis 配置。
+```yaml
+spring: 
+	redis: 
+		host: 127.0.0.1 
+		port: 6379
+```
+
