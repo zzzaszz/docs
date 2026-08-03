@@ -1236,8 +1236,22 @@ spring:
 ```
 
 ```java
-
-
-
-
+String key = "quickOutput:" + quickWipqtyPojo.getWipid() + ":" + quickWipqtyPojo.getWpid();  
+// 获取Redisson分布式锁  
+RLock rLock = redissonClient.getLock(key);
+try {
+	// 尝试加锁，不等待；watchdog自动续期，防止死锁  
+	locked = rLock.tryLock(0, TimeUnit.SECONDS);  
+	if (!locked) {  
+	    return R.fail("接口繁忙，请稍后再试！");  
+	}  
+} finally {  
+    // 延迟1秒后释放锁，确保事务提交完成  
+    if (locked) {  
+        Thread.sleep(1000);  
+        if (rLock.isHeldByCurrentThread()) {  
+            rLock.unlock();  
+        }  
+    }  
+}
 ```
