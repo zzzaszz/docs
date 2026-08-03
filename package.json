@@ -8,6 +8,8 @@
     "doc": "doc"
   },
   "scripts": {
+    "dev": "vitepress dev",
+    "doc": "vitepress dev",
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
     "docs:preview": "vitepress preview"
