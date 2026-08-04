@@ -508,6 +508,25 @@ public class OrderDTO {
 > - Integer / Long 👉 用 `@NotNull` + `@Min`
 
 ### 5、@Transactional 事务
+#### 参数
+```java
+@Transactional( 
+	value = "", 
+	transactionManager = "", 
+	propagation = Propagation.REQUIRED, 
+	isolation = Isolation.DEFAULT, 
+	timeout = 30, 
+	readOnly = false,
+	rollbackFor = Exception.class, 
+	noRollbackFor = {} 
+)
+```
+##### value / transactionManager
+指定使用哪个事务管理器。
+单数据库不用配置，在多数据数据库情况下指定使用
+@Transactional( transactionManager="orderTxManager" )
+
+
 
 ```java
 @Service
