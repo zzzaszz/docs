@@ -546,6 +546,13 @@ public class OrderDTO {
 | READ_COMMITTED   | 读已提交，解决脏读、但是会出现不可重复读、幻读      |
 | REPEATABLE_READ  | 可重复读，解决脏读、不可重复读，MYSQL默认使用    |
 | SERIALIZABLE     | 串行化，最隔离，所有事务排队，解决全部问题，但是性能最低 |
+###### 脏读（Dirty Read）
+一个事务读取到了另一个事务**还没有提交的数据**。
+![](static/dirtryread.png)
+READ_UNCOMMITTED可能产生，其他不会
+###### 不可重复读（Non-Repeatable Read）
+
+###### 幻读（Phantom Read）
 ##### timeout（事务超时时间）
 事务超出时间后回滚，默认由数据库决定TIMEOUT_DEFAULT
 ##### readOnly（只读）
