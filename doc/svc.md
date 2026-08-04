@@ -538,13 +538,23 @@ public class OrderDTO {
 | NESTED        | 嵌套事务，如下层事务失败回滚下层，上层继续           |
 ##### 三、isolation（事务隔离级别）
 
-| 值                | 说明             |
-| ---------------- | -------------- |
-| DEFAULT          | 数据库默认          |
-| READ_UNCOMMITTED | 读未提交，高性能，但是会出现 |
-| READ_COMMITTED   | 读已提交           |
-| REPEATABLE_READ  | 可重复读           |
-| SERIALIZABLE     | 串行化            |
+| 值                | 说明                           |
+| ---------------- | ---------------------------- |
+| DEFAULT          | 数据库默认                        |
+| READ_UNCOMMITTED | 读未提交，高性能，但是会出现脏读、不可重复读、幻读    |
+| READ_COMMITTED   | 读已提交，解决脏读、但是会出现不可重复读、幻读      |
+| REPEATABLE_READ  | 可重复读，解决脏读、不可重复读，MYSQL默认使用    |
+| SERIALIZABLE     | 串行化，最隔离，所有事务排队，解决全部问题，但是性能最低 |
+##### timeout（事务超时时间）
+事务超出时间后回滚，默认由数据库决定TIMEOUT_DEFAULT
+##### readOnly（只读）
+默认false，允许增删改，开启true后只查询，减少数据库检查，关闭Hibernate脏检查，不禁止修改
+##### rollbackFor（回滚异常）
+Spring默认只回滚RuntimeException Error，比如Exception（）不回滚
+改为@Transactional( rollbackFor = Exception.class )后所有异常都回滚，常用
+##### rollbackForClassName
+
+
 
 
 
