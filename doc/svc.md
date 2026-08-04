@@ -526,6 +526,7 @@ public class OrderDTO {
 单数据库不用配置，在多数据数据库情况下指定使用
 @Transactional( transactionManager="orderTxManager" )
 ##### propagation（事务传播行为）
+加入事务 = 当前方法不自己创建新的事务，而是使用调用方已经开启的那个事务。多个方法共享同一个事务边界。是指加入同一个数据库连接
 
 | 值             | 含义                              |
 | ------------- | ------------------------------- |
@@ -553,10 +554,27 @@ public class OrderDTO {
 Spring默认只回滚RuntimeException Error，比如Exception（）不回滚
 改为@Transactional( rollbackFor = Exception.class )后所有异常都回滚，常用
 ##### rollbackForClassName
+@Transactional( rollbackForClassName="java.lang.Exception" )等价rollbackFor=Exception.class
 
+| 方式                   | 优点    |
+| -------------------- | ----- |
+| rollbackFor          | 编译检查  |
+| rollbackForClassName | 动态字符串 |
 
+一般不用。
 
-
+##### noRollbackFor（不回滚）
+控制哪些异常不回滚，noRollbackFor = BusinessException.class
+##### 优先级关系
+@Transactional( 
+	propagation = Propagation.REQUIRED, 
+	isolation = Isolation.READ_COMMITTED, 
+	timeout = 10, 
+	readOnly = false, 
+	rollbackFor = Exception.class
+)
+执行顺序如下
+![](static/rollback.png)
 
 ---
 
