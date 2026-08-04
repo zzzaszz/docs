@@ -1256,5 +1256,58 @@ try {
 }
 ```
 ## @Async和线程池
+#### 区别表
+
+| 对比项     | 手动线程池（ThreadPoolExecutor）         | @Async       |
+| ------- | --------------------------------- | ------------ |
+| 本质      | Java线程池API                        | Spring异步调用机制 |
+| 控制方式    | 手动提交任务                            | 注解触发异步       |
+| 调用方式    | `executor.execute()` / `submit()` | 方法加 `@Async` |
+| 依赖      | JDK                               | Spring       |
+| 是否需要线程池 | 需要自己创建                            | 默认有，也可以指定    |
+| 线程生命周期  | 自己管理                              | Spring管理     |
+| 灵活性     | ⭐⭐⭐⭐⭐                             | ⭐⭐⭐          |
+| 简洁性     | ⭐⭐⭐                               | ⭐⭐⭐⭐⭐        |
+| 适合批量任务  | ✅非常适合                             | 一般           |
+| 适合简单异步  | 一般                                | ✅非常适合        |
 #### @Async
 ![](static/mrp.png)
+```java
+@EnableAsync
+@Configuration
+public class AsyncConfig {
+
+
+@Bean("mrpExecutor")
+public Executor mrpExecutor(){
+
+    ThreadPoolTaskExecutor executor =
+            new ThreadPoolTaskExecutor();
+
+    executor.setCorePoolSize(10);
+    executor.setMaxPoolSize(20);
+    executor.initialize();
+
+    return executor;
+}
+
+}
+
+// 使用
+@Async("mrpExecutor") 
+public void pullMrpitem(){
+
+}
+```
+#### 手动线程池
+```java
+//创建
+ThreadPoolExecutor executor = new ThreadPoolExecutor( 10, 20, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000) );
+
+
+//提交任务
+executor.execute(() -> { 
+	pullMrpitem(item); 
+});
+
+```
