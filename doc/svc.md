@@ -525,20 +525,28 @@ public class OrderDTO {
 指定使用哪个事务管理器。
 单数据库不用配置，在多数据数据库情况下指定使用
 @Transactional( transactionManager="orderTxManager" )
+##### propagation（事务传播行为）
+
+| 值             | 含义                              |
+| ------------- | ------------------------------- |
+| REQUIRED      | 加入已有事务，没有则创建（默认）                |
+| REQUIRES_NEW  | 创建新事务，暂停旧事务，适合操作日志、审计记录、消息记录    |
+| SUPPORTS      | 有事务加入，没有事务普通执行，适合查询方法。          |
+| NOT_SUPPORTED | 暂停事务，无事务执行，存在事务时暂停，然后执行方法，避免长事务 |
+| MANDATORY     | 必须存在事务，必须有事务，否则抛异常              |
+| NEVER         | 必须不存在事务，必须没有事务，否则抛异常            |
+| NESTED        | 嵌套事务，如下层事务失败回滚下层，上层继续           |
+##### 三、isolation（事务隔离级别）
+
+| 值                | 说明             |
+| ---------------- | -------------- |
+| DEFAULT          | 数据库默认          |
+| READ_UNCOMMITTED | 读未提交，高性能，但是会出现 |
+| READ_COMMITTED   | 读已提交           |
+| REPEATABLE_READ  | 可重复读           |
+| SERIALIZABLE     | 串行化            |
 
 
-
-```java
-@Service
-public class OrderService {
-
-    @Transactional
-    public void createOrder() {
-        saveOrder();
-        saveOrderItem();
-    }
-}
-```
 
 ---
 
