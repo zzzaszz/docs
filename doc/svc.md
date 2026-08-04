@@ -1256,6 +1256,7 @@ try {
 }
 ```
 ## @Async和线程池
+**异步线程无法继承当前线程事务。**
 #### 区别表
 
 | 对比项     | 手动线程池（ThreadPoolExecutor）         | @Async       |
@@ -1300,14 +1301,32 @@ public void pullMrpitem(){
 }
 ```
 #### 手动线程池
+支持使用AtomicInteger原子自增判断
+AtomicInteger counter = new AtomicInteger(0); // 用于计数已处理的任务数量
+线程池内int currentCount = counter.incrementAndGet(); // 增加计数器
 ```java
 //创建
 ThreadPoolExecutor executor = new ThreadPoolExecutor( 10, 20, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000) );
 
+//原子计数
+AtomicInteger counter = new AtomicInteger(0); // 用于计数已处理的任务数量
 
 //提交任务
-executor.execute(() -> { 
-	pullMrpitem(item); 
-});
+for (WkMrpitemPojo wkMrpitemPojo : mrpItemMergeList) {  
+    // 提交任务到线程池  
+    executor.execute(() -> {  
+        pullMrpitem();  
+        int currentCount = counter.incrementAndGet(); // 增加计数器  
+        
+        PrintColor.zi("已处理任务数量：" + currentCount + " / " + size);
+        
+        // 更新Redis中的进度信息 避免频繁更新，每50次  
+        if (currentCount % 50 == 0 || currentCount == size) {  
+            missionMsg.put("finish", currentCount);  
+            this.redisService.setCacheObject(state_redisKey
+            , missionMsg, 10L, TimeUnit.MINUTES);  
+        }  
+    });  
+}
 
 ```
