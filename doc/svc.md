@@ -1433,10 +1433,29 @@ private final Map<String, Map<String, String>> configCache = new ConcurrentHashM
 
 > **把经常读取、变化不频繁的数据加载到当前应用 JVM 内存中，通过两层 Map 快速查询。**
 
-|级别|位置|速度|
-|---|---|---|
-|一级缓存|JVM|最快|
-|二级缓存|Redis|快|
-|三级缓存|DB|慢|
+| 级别   | 位置    | 速度  |
+| ---- | ----- | --- |
+| 一级缓存 | JVM   | 最快  |
+| 二级缓存 | Redis | 快   |
+| 三级缓存 | DB    | 慢   |
+可使用JVM + Redis + 数据库组合
+JVM读不到去读redis，redis读不到去读DB，如果有则同步上一级
+#### 使用举例
+```java
+private final Map<String, Map<String, String>> configCache = new ConcurrentHashMap<>();
+//检查缓存是否存在，不存早则读取DB回写
+// 检查缓存是否有效  
+if (!forceRefresh && isCacheValid(cacheKey)) {  
+    log.debug("从缓存获取OSS配置, tenantId: {}", tenantId);  
+    return configCache.get(cacheKey);  
+}  
+  
+// 从数据库获取配置  
+Map<String, String> config = loadConfigFromDatabase(tenantId);  
+  
+// 更新缓存  
+configCache.put(cacheKey, config);
 
----
+
+```
+使用configCache.clear();清除缓存
