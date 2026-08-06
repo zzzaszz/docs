@@ -1413,3 +1413,30 @@ for (WkMrpitemPojo wkMrpitemPojo : mrpItemMergeList) {
 }
 
 ```
+## `ConcurrentHashMap`实现spring缓存
+private final Map<String, Map<String, String>> configCache = new ConcurrentHashMap<>();
+
+定义的是一个**基于内存的本地缓存（Local Cache）**，具体来说是：
+
+> 使用 `ConcurrentHashMap` 实现的线程安全二级 Map 缓存。
+### 和 Redis 的区别
+
+|      | ConcurrentHashMap |  Redis  |
+| :--: | :---------------: | :-----: |
+|  位置  |       JVM内存       |  独立服务   |
+|  速度  |        最快         |   较快    |
+|  共享  |       单实例共享       |  多实例共享  |
+| 重启丢失 |         是         | 否(可持久化) |
+|  适合  |      配置、小数据       |  分布式缓存  |
+| 网络开销 |         无         |    有    |
+本质是：
+
+> **把经常读取、变化不频繁的数据加载到当前应用 JVM 内存中，通过两层 Map 快速查询。**
+
+|级别|位置|速度|
+|---|---|---|
+|一级缓存|JVM|最快|
+|二级缓存|Redis|快|
+|三级缓存|DB|慢|
+
+---
