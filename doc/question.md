@@ -451,3 +451,31 @@ if (Objects.equals(wipgroupPojo.getDaytype(), 1)) {
     }  
 }
 ```
+## 采购数量累计计算的问题
+```java
+// 按材料预算明细累计本次采购前面行占用的数量（扣减旧数量后的净增）  
+Map<String, Double> citeQtyMap = new HashMap<>();  
+for (BuyPlanitemPojo planItem : lst) {  
+    if ("材料预算".equals(billType)) {  
+        CmsMatbudgetitemPojo cmsMatbudgetitemPojo = this.cmsMatbudgetitemMapper.getEntity(planItem.getCiteitemid());  
+        if (cmsMatbudgetitemPojo != null) {  
+            //旧单据  
+            BuyPlanitemPojo entity = buyPlanitemMapper.getEntity(planItem.getId(), buyPlanPojo.getTenantid());  
+            double orgQty = 0D;  
+            if (entity != null && entity.getQuantity() != null) {  
+                orgQty = entity.getQuantity();  
+            }  
+            double accumulateQty = citeQtyMap.getOrDefault(planItem.getCiteitemid(), 0D);  
+            //历史已采购数量(扣掉本行旧数量) + 本次采购前面行累计数量 + 当前行数量，和材料预算控制数量比较  
+            double totalQty = cmsMatbudgetitemPojo.getBuyqty() - orgQty + accumulateQty + planItem.getQuantity();  
+            if (totalQty > cmsMatbudgetitemPojo.getCtrlquantity()) {  
+                throw new RuntimeException(rowNumber + "行,采购总数:" + totalQty + "超出材料预算数:" + cmsMatbudgetitemPojo.getCtrlquantity());  
+            }  
+            citeQtyMap.put(planItem.getCiteitemid(), accumulateQty + (planItem.getQuantity() - orgQty));  
+        } 
+    }  
+}
+
+
+
+```
