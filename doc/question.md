@@ -482,25 +482,40 @@ for (BuyPlanitemPojo planItem : lst) {
 
 ## 异步轮询
 ```java
-@ApiOperation(value = "异步新增结算单(返回任务uuid)", notes = "异步新增结算单,json含machids数组,立即返回uuid供轮询", produces = "application/json")  
-@RequestMapping(value = "/createAsync", method = RequestMethod.POST)  
-@PreAuthorize(hasPermi = "Bus_CostSettlement.Add")  
-public R<String> createAsync(@RequestBody String json) {  
+/**  
+ * 倒冲领料  
+ *  
+ * @param quickBackDto 倒冲领料参数  
+ * @return 处理结果  
+ */  
+@ApiOperation(value = "轮询倒冲领料", notes = "倒冲领料", produces = "application/json")  
+@RequestMapping(value = "/quickBackflush", method = RequestMethod.POST)  
+@PreAuthorize(hasPermi = "Mat_Requisition.Edit")  
+public R<String> quickBackflush(@RequestBody QuickBackDto quickBackDto) {  
+    LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());  
     try {  
-        BusCostsettlementPojo pojo = JSONArray.parseObject(json, BusCostsettlementPojo.class);  
-        LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());  
-        // 前置逻辑同基类 /create：生成单号 + 填充制表人/租户等  
-        String refno = RefNoUtils.generateRefNo(moduleCode, "Bus_CostSettlement", null, loginUser.getTenantid());  
-        // 生成任务 uuid，异步执行归集（loginUser 在主线程取好传入，避免子线程丢失请求上下文）  
         String redisKey = UUID.randomUUID().toString();  
-        busCostsettlementService.insertAsync(redisKey, pojo, loginUser);  
+        this.matRequisitionService.createAsync(quickBackDto,redisKey,loginUser.getTenantid(),SecurityUtils.getToken(ServletUtils.getRequest()));  
         return R.ok(redisKey);  
     } catch (Exception e) {  
         return R.fail(e.getMessage());  
     }  
+}  
+
+/* 下层service加入
+@Override  
+@Async  
+@Transactional  
+*/
+
+  
+@ApiOperation(value = "轮询创建任务状态", notes = "按uuid查询异步创建状态:code=100进行中/200成功(含billid,refno)/500失败(含error)", produces = "application/json")  
+@RequestMapping(value = "/getCreateState", method = RequestMethod.GET)  
+public R<Map<String, Object>> getCreateState(String rediskey) {  
+    // getCacheObject 是泛型方法 <T> T，须以 Map 接收让 T 推断为 Map，再 R.ok 包装；  
+    // 状态存独立 key（costsettle_state:{uuid}）带 TTL，避免 hash field 无法单独过期导致堆积  
+    Map<String, Object> state = redisService.getCacheObject(MyConstant.ASYNC_REQUISITION_STATE + rediskey);  
+    return R.ok(state);  
 }
-
-
-
 
 ```
