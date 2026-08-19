@@ -479,3 +479,28 @@ for (BuyPlanitemPojo planItem : lst) {
 
 
 ```
+
+## 异步轮询
+```java
+@ApiOperation(value = "异步新增结算单(返回任务uuid)", notes = "异步新增结算单,json含machids数组,立即返回uuid供轮询", produces = "application/json")  
+@RequestMapping(value = "/createAsync", method = RequestMethod.POST)  
+@PreAuthorize(hasPermi = "Bus_CostSettlement.Add")  
+public R<String> createAsync(@RequestBody String json) {  
+    try {  
+        BusCostsettlementPojo pojo = JSONArray.parseObject(json, BusCostsettlementPojo.class);  
+        LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());  
+        // 前置逻辑同基类 /create：生成单号 + 填充制表人/租户等  
+        String refno = RefNoUtils.generateRefNo(moduleCode, "Bus_CostSettlement", null, loginUser.getTenantid());  
+        // 生成任务 uuid，异步执行归集（loginUser 在主线程取好传入，避免子线程丢失请求上下文）  
+        String redisKey = UUID.randomUUID().toString();  
+        busCostsettlementService.insertAsync(redisKey, pojo, loginUser);  
+        return R.ok(redisKey);  
+    } catch (Exception e) {  
+        return R.fail(e.getMessage());  
+    }  
+}
+
+
+
+
+```
