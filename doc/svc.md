@@ -1459,3 +1459,29 @@ configCache.put(cacheKey, config);
 
 ```
 使用configCache.clear();清除缓存
+
+## java精度问题相关
+BigDecimal表示二进制浮点数
+不要直接 new BigDecimal(double)，应该new BigDecimal(string)否则会出现精度问题
+或者BigDecimal a = BigDecimal.valueOf(0.1);
+### BigDecimal加减乘除
+```java
+//   add() subtract() multiply() divide()
+BigDecimal a = new BigDecimal("10.50"); 
+BigDecimal b = new BigDecimal("2.00");
+
+a.add(b);
+
+a.subtract(b);
+
+a.multiply(b);
+
+a.divide(b);
+
+
+```
+不指定舍入规则，要求结果必须是**有限小数**。比如
+new BigDecimal("10") .divide(new BigDecimal("3"));
+会抛出异常ArithmeticException: Non-terminating decimal expansion
+
+
