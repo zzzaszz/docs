@@ -403,6 +403,8 @@ git config --local http.https://github.com.proxy http://127.0.0.1:7890
 
 git config --local --unset http.proxy
 git config --local --unset https.proxy
+// 查看配置位置
+git config --show-origin --get-regexp ".*proxy.*"
 ```
 
 ## 部署相关
