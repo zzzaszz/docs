@@ -1484,4 +1484,23 @@ a.divide(b);
 new BigDecimal("10") .divide(new BigDecimal("3"));
 会抛出异常ArithmeticException: Non-terminating decimal expansion
 
+divide除法指定小数位和舍入方式
+a.divide(b, 4, RoundingMode.HALF_UP)
 
+
+new BigDecimal("123.4500") .stripTrailingZeros();    stripTrailingZeros()方法去除末尾无意义的0，可能变成科学计数法形式
+
+compareTo判断数值的大小
+
+| 内容                 | 含义         | 示例                           |
+| ------------------ | ---------- | ---------------------------- |
+| BigDecimal         | 精确十进制计算    | `new BigDecimal("10.25")`    |
+| precision          | 有效数字总数     | `123.45 → 5`                 |
+| scale              | 小数位数       | `123.45 → 2`                 |
+| setScale           | 调整小数位      | `123.456 → 123.46`           |
+| RoundingMode       | 舍入规则       | `HALF_UP`                    |
+| divide             | 除法         | `a.divide(b, 4, HALF_UP)`    |
+| compareTo          | 数值比较       | `a.compareTo(b)`             |
+| equals             | 数值+scale比较 | `1.0 != 1.00`                |
+| stripTrailingZeros | 去掉末尾0      | `1.2300 → 1.23`              |
+| valueOf            | 推荐从基本类型转换  | `BigDecimal.valueOf(double)` |
