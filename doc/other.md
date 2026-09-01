@@ -406,6 +406,17 @@ git config --local --unset https.proxy
 // 查看配置位置
 git config --show-origin --get-regexp ".*proxy.*"
 ```
+### 设置gitlab不走代理，cmd的http代理查看
+```bash
+//设置不代理inksdev
+git config --global http.http://git.inksdev.com.proxy ""
+//检查
+git config --global --list --show-origin | findstr /i proxy
+//测试
+git ls-remote http://git.inksdev.com/omssvc/inks-service-manu-master.git
+//查看http的代理
+set | findstr /i proxy
+```
 
 ## 部署相关
 ### YAML部署docker配置信息
