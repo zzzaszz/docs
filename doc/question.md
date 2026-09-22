@@ -519,3 +519,142 @@ public R<Map<String, Object>> getCreateState(String rediskey) {
 }
 
 ```
+
+---
+
+## 注册后异步发欢迎邮件（MQ 异步解耦）
+
+注册成功后要发欢迎邮件。发邮件要连 SMTP，几百毫秒到几秒，**同步发就等于让用户干等**：
+写库 200ms + 发邮件 3000ms ≈ 3.2 秒才返回。改成注册只往队列里发一条消息，邮件由消费者在另一个线程发，
+接口 200ms 就返回了。
+
+```java
+// 注册业务：只喊一声“这个用户注册成功了”，一行邮件代码都没有 → 解耦
+sender.send("", MqConst.EXAMPLE_MAIL_QUEUE, email);
+
+// 邮件消费者：跑在独立线程上，接口早就返回了它才开始干活
+@RabbitListener(queues = MqConst.EXAMPLE_MAIL_QUEUE)
+public void onMailTask(String email) {
+    mailService.sendWelcomeMail(email);
+}
+```
+
+同一份注册逻辑再加一件后续动作（把手机号、客户等级同步到另一张库表），对比更明显：
+
+- 同步做：写库 200ms + 发邮件 3000ms + 跨库同步 500ms ≈ **3700ms**，用户全程干等
+- 异步做：只是多发一条消息，接口仍然 ≈ **200ms**
+
+**要点：**
+- 异步：把"必须现在做完的"（写库）和"可以稍后做的"（发邮件、跨库同步）拆开；
+- 解耦：注册逻辑里没有一行邮件/资料代码，将来要加发短信、送积分，都是各自加消费者，注册代码不用动；
+- 代价：后续动作失败**不影响**注册成功，所以必须配合重试 + 死信队列兜底。
+
+### 发消息失败：退避重试 4 次，仍失败就不再执行后续步骤
+
+发消息本身也会失败（Broker 连不上、连接被拒、channel 已关闭），`convertAndSend` 会抛 `AmqpException`。
+
+```java
+boolean mailSent = false;
+int failedTimes = 0;
+for (int attempt = 1; attempt <= MAX_SEND_RETRY; attempt++) {   // MAX_SEND_RETRY = 4
+    try {
+        sendOrFail("", MqConst.EXAMPLE_MAIL_QUEUE, email, attempt <= failTimes);
+        mailSent = true;
+        break;
+    } catch (Exception e) {
+        failedTimes = attempt;
+        log.warn("[注册-异步] 第 {}/{} 次发送邮件消息失败：{}", attempt, MAX_SEND_RETRY, e.getMessage());
+        if (attempt < MAX_SEND_RETRY) {
+            sleep(RETRY_BACKOFF_MS);   // 200ms 退避，重试不是免费的，用户也在等
+        }
+    }
+}
+
+// 4 次全失败：第二步不执行，避免"资料同步了、欢迎邮件却没发"的不一致
+if (!mailSent) {
+    return "注册已完成，但后续动作未发出：邮件消息连续 " + MAX_SEND_RETRY + " 次发送失败，已放弃资料同步";
+}
+```
+
+多件事**要么都发、要么都不发**。真实项目更稳的做法是本地消息表：把要发的消息先写进
+"待发送消息表"（和注册写在**同一个事务**里），再由定时任务扫表重发——接口不用死等重试，进程挂了也不丢消息。
+
+### 消费失败：放回队列重试，累计 3 次后进死信
+
+消费端处理失败（目标库唯一键冲突、字段超长、库连不上）**不要抛异常**，抛出去会 nack 重回队列变成无限重试。
+做法是：失败就重新发一条带 `retryCount` 的消息放回队列，自己正常返回；累计 3 次仍失败就投死信队列。
+
+```java
+private void handleFailure(String payload, int attempt, boolean simulateFail, Exception e) {
+    Map<String, String> headers = new HashMap<>();
+    headers.put("retryCount", String.valueOf(attempt));   // 重试次数必须由发送方重新设
+
+    if (attempt < MAX_RETRY) {          // MAX_RETRY = 3
+        // 重新发一条放回队列，旧的那条由框架正常 ack 掉
+        sender.sendWithHeaders("", MqConst.EXAMPLE_PROFILE_QUEUE, payload, headers);
+    } else {
+        // 到上限仍失败：投死信，等人工/定时任务处理
+        sender.sendWithHeaders(MqConst.EXAMPLE_PROFILE_DLX_EXCHANGE,
+                MqConst.EXAMPLE_PROFILE_DEAD_ROUTING_KEY, payload, headers);
+    }
+}
+```
+
+**为什么用"重新发一条"而不是 `basicNack(requeue=true)`：**
+重回队列时**消息头不会变**——第一次带 `retryCount=1`，重回后还是 1，永远数不清重试了几次，最后变成无限重试。
+想累计次数只能自己重新发一条新的、再 ack 掉旧的。
+
+> 死信队列建议配告警：里面堆消息说明有一批数据一直处理不过去，得有人看。
+
+---
+
+## 秒杀 / 高并发削峰（入口扣库存，抢到的才进 MQ）
+
+**问题：活动开始那一秒几万人同时点"立即抢购"。如果每个请求都直接去数据库扣库存，数据库瞬间被打爆；
+同时 100 个人抢 10 件还不能超卖。
+
+**做法：入口先用一次**原子扣减**挡住绝大部分请求（真实项目扣的是 Redis 预扣库存），
+抢到的才发消息进队列异步落库，没抢到的**当场返回"已抢光"，根本不进 MQ。
+所以 30 个人抢 10 件，队列里只有 10 条。
+
+```java
+private void placeOrderRequest(String userId) {
+    if (tryDeductStock()) {                                  // 入口原子扣减
+        successCount.incrementAndGet();
+        sender.send("", MqConst.SECKILL_QUEUE, userId);       // 抢到了才入队，落库交给消费者
+    } else {
+        rejectCount.incrementAndGet();                        // 没抢到直接返回，不入队
+    }
+}
+
+/** 防超卖核心：CAS 循环，等价于 update goods set stock = stock - 1 where id = ? and stock > 0 */
+private boolean tryDeductStock() {
+    while (true) {
+        int current = stock.get();
+        if (current <= 0) {
+            return false;                                     // 已抢光
+        }
+        if (stock.compareAndSet(current, current - 1)) {
+            return true;                                      // 扣减成功
+        }
+        // CAS 失败：别人抢先改了库存，重读再试
+    }
+}
+```
+
+消费者只负责落库（100ms 一单模拟写订单表），队列里不会有"库存不足"的废消息，所以也不用判库存：
+
+```java
+@RabbitListener(queues = MqConst.SECKILL_QUEUE)
+public void onOrder(String userId) {
+    seckillService.saveOrder(userId);
+}
+```
+
+**要点：**
+- **入口挡流量**：30 人抢 10 件，队列里就是 10 条；把注定失败的请求留给消费者去判，是白费力气；
+- **防超卖**：扣减必须原子（CAS，或 SQL `update ... set stock = stock - 1 where stock > 0` 看影响行数）；
+  "先 get 再减"在多线程/多实例下一定超卖；
+- **削峰**：入口 10ms 返回，数据库由消费者按固定节奏写，不会被瞬时流量冲垮；
+- **真实秒杀是两段式**：入口扣 Redis 预扣库存挡流量，异步落库时数据库再扣一次兜底，对不上由定时任务对账补偿；
+- 消费端落库失败（连不上库、唯一键冲突）按上一节的套路处理：重试 + 死信，**别抛异常触发无限重试**。
