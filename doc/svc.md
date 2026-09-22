@@ -1514,3 +1514,161 @@ compareTo判断数值的大小
 | equals             | 数值+scale比较 | `1.0 != 1.00`                |
 | stripTrailingZeros | 去掉末尾0      | `1.2300 → 1.23`              |
 | valueOf            | 推荐从基本类型转换  | `BigDecimal.valueOf(double)` |
+
+---
+## RabbitMQ
+
+> MQ（Message Queue，消息队列）：用一条队列把「发消息的」和「处理消息的」隔开——生产者只管把消息丢进去，消费者按自己的节奏取出来处理。
+> 解决三件事：**异步**（慢操作挪到后台，用户不用等）、**解耦**（上下游互不认识，加需求只改订阅方）、**削峰**（请求先排队，数据库按自己的速度消费）。
+
+可运行 demo：`0-other\rabbit-demo`（Spring Boot 2.5.3 + spring-boot-starter-amqp，带网页演示台，边点按钮边看控制台日志）。
+
+### 1、核心概念与流转关系
+
+```text
+生产者 Producer ──发消息──> 交换机 Exchange ──按绑定规则──> 队列 Queue ──取消息──> 消费者 Consumer
+                                │
+                          绑定 Binding（routingKey → 队列）
+```
+
+| 概念             | 快递类比  | 说明                                          |
+| -------------- | ----- | ------------------------------------------- |
+| Producer 生产者   | 寄件人   | 发消息的一方，发完通常就不管了                             |
+| Message 消息     | 包裹    | = body（消息体）+ headers（属性与自定义头，如 TTL、fail 标记） |
+| Exchange 交换机   | 分拣中心  | 消息的第一站，**自己不存货**，只按绑定规则分发                   |
+| Binding 绑定     | 分拣规则表 | 队列向交换机声明「这类消息给我」                            |
+| RoutingKey 路由键 | 地址    | 生产者发消息时带的标签，交换机拿它对照绑定规则                     |
+| Queue 队列       | 货架    | 真正存消息的地方，先进先出；**一条消息只会被一个消费者取走**            |
+| Consumer 消费者   | 收件人   | `@RabbitListener` 监听队列，来一条处理一条              |
+| Ack 确认         | 签收    | 消费者回执“处理完了”，Broker 才删消息；没 ack 的消息可以重新投递     |
+
+要点：**交换机不存消息，队列才存**；想让「大家都收到」不是靠消费者复制，而是**绑多个队列**（fanout）。
+交换机 4 种类型：
+
+| 类型      | 规则                               | 记忆                     |
+| ------- | -------------------------------- | ---------------------- |
+| fanout  | 无视 routingKey，绑了就发（消息复制给每个队列）    | 大喇叭广播                  |
+| direct  | routingKey 与 bindingKey **完全相等** | 精确投递                   |
+| topic   | 支持 `*`（一个词）、`#`（零或多个词）通配         | 模糊匹配，`order.#` 收所有订单消息 |
+| headers | 按消息头匹配，性能差                       | 知道有这东西就行               |
+
+### 2、Spring Boot 接入
+
+队列/交换机用 `QueueBuilder` / `ExchangeBuilder` 声明成 `@Bean`，应用启动连上 Broker 时由内置的 RabbitAdmin **自动创建**，不用去管理台手动建。
+
+```java
+@Bean
+public Queue helloQueue() {
+    return QueueBuilder.durable("demo.hello.queue").build();   // durable：队列持久化，重启不丢
+}
+
+@Bean
+public Binding bindError() {
+    return BindingBuilder.bind(directQueueError()).to(directExchange()).with("error");
+}
+```
+
+```java
+// 发送：exchange 传 "" 表示走默认交换机，此时 routingKey 写队列名 = 直接把消息塞进队列
+rabbitTemplate.convertAndSend("", "demo.hello.queue", msg,
+        new CorrelationData(UUID.randomUUID().toString()));   // CorrelationData 是消息的身份证号，发布确认回调时对号入座
+
+// 接收：队列里一有消息就反序列化成方法参数（这里是 String）调用它
+@RabbitListener(queues = "demo.hello.queue")
+public void receive(String msg) {
+    log.info("[HelloWorld] 收到消息: {}", msg);
+}
+```
+
+关键 yml：
+
+```yaml
+spring:
+  rabbitmq:
+    host: 192.168.99.53
+    port: 5672
+    publisher-confirm-type: correlated   # 发布确认：消息到 Broker 后回调 ConfirmCallback
+    publisher-returns: true              # 发布退回：路由不到队列时回调 ReturnsCallback
+    template:
+      mandatory: true                    # 路由不到就退回给生产者，而不是直接丢弃
+    listener:
+      simple:
+        prefetch: 1                      # 一次只预取 1 条，干完再拿 → 处理快的消费者自然分到更多消息
+        acknowledge-mode: auto           # 方法正常返回=ack，抛异常=nack
+```
+
+### 3、五种工作模式
+
+| 模式                | 结构                      | 特点                                                |
+| ----------------- | ----------------------- | ------------------------------------------------- |
+| Hello World       | 默认交换机 + 1 队列            | 一发一收，最简单                                          |
+| Work Queue        | 1 队列 + 多消费者             | 同一条消息只被一个消费者抢到；配合 prefetch=1 实现「能者多劳」             |
+| Publish/Subscribe | fanout                  | 一条消息复制给所有绑定队列，每个消费者各收一份                           |
+| Routing           | direct                  | 按 routingKey 精确分流（如 error 单独一队重点处理）               |
+| Topics            | topic                   | 通配符匹配，一发多收                                        |
+| RPC               | replyTo + correlationId | 发消息并**同步等回复**，`convertSendAndReceive` 会阻塞到消费者返回结果 |
+
+### 4、消息不丢：三道保险
+
+```text
+生产者 ──①发布确认 Confirm──> 交换机 ──②持久化 durable──> 队列 ──③消费确认 Ack──> 消费者
+        （路由不到队列时 ①' 发布退回 Return）                    （兜底：死信队列 DLX）
+```
+
+| 保险             | 做法                                                            |
+| -------------- | ------------------------------------------------------------- |
+| ① 发布确认 Confirm | yml `publisher-confirm-type: correlated`，消息到达交换机后回调           |
+| ①' 发布退回 Return | `publisher-returns: true` + `mandatory: true`，路由不到任何队列时退回给生产者 |
+| ② 持久化          | 队列 `durable(true)` + 消息持久化，Broker 重启不丢                        |
+| ③ 消费确认 Ack     | 自动：方法正常返回=ack、抛异常=nack；手动：代码里自己调 `basicAck` / `basicNack`     |
+
+### 5、死信队列 & 延迟队列
+
+死信的三种来源：**被消费者 nack/reject 且 requeue=false、消息过期（TTL 到点没人消费）、队列超长**。
+死信不会凭空消失，会被转发到队列声明时挂的**死信交换机**，进死信队列统一处理（落库留痕 / 告警 / 人工介入）。
+
+```java
+QueueBuilder.durable("demo.business.queue")
+        .deadLetterExchange("demo.dead.exchange")      // x-dead-letter-exchange
+        .deadLetterRoutingKey("dead")                  // x-dead-letter-routing-key
+        .build();
+```
+
+**延迟队列 = TTL + 死信的组合**：把消息发进一个**没有消费者的队列**睡 X 秒，过期变死信，死信交换机再转发到真正干活的队列。
+典型场景：下单 30 分钟未支付自动取消、10 分钟后发提醒短信。
+
+> 坑：每条消息自带 TTL（`setExpiration`）时，RabbitMQ 只检查**队头**消息——队头那条要睡 60 秒，后面只睡 5 秒的也得等 60 秒（队头阻塞）。
+> 生产上要么按固定 TTL 分多个队列，要么装官方插件 `rabbitmq_delayed_message_exchange`。
+
+### 6、异步场景举例：注册成功后发欢迎邮件
+
+发邮件要连 SMTP，几百毫秒到几秒，这种慢操作不该让用户等：
+
+| 做法         | 接口耗时      | 说明                                       |
+| ---------- | --------- | ---------------------------------------- |
+| 同步发        | ~3200 ms  | 注册（写库 200ms）+ 当场发邮件（3000ms），用户全程干等       |
+| 丢给 MQ 异步发  | ~200 ms   | 注册完只发一条消息就返回，邮件由消费者在**另一个线程**上慢慢发        |
+
+```java
+// 注册业务：只喊一声“这个用户注册成功了”，一行邮件代码都没有 → 解耦
+sender.send("", "demo.example.mail.queue", email);
+
+// 邮件消费者：跑在独立线程上，接口早就返回了它才开始干活
+@RabbitListener(queues = "demo.example.mail.queue")
+public void onMailTask(String email) {
+    mailService.sendWelcomeMail(email);
+}
+```
+
+> 代价：邮件发失败**不影响**注册成功，所以要配合发布确认 + 死信队列做补偿（重试 N 次仍失败就进死信，由人工/定时任务兜底）。
+
+### 7、踩过的坑
+
+| 坑                 | 现象                | 解法                                                                                                          |
+| ----------------- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| 中文变问号             | 消息内容全是 `?`        | Spring AMQP 默认 `SimpleMessageConverter` 用 ISO-8859-1 转字节；自定义转换器固定 UTF-8，传对象换 `Jackson2JsonMessageConverter` |
+| 自动 ack + 消费抛异常    | 无限重试刷屏            | 改手动 ack，重试 N 次后 `basicNack(requeue=false)` 进死信（重回队列时消息头不变，想累计重试次数要自己重发一条带计数的新消息，再 ack 掉旧的）                  |
+| 手动 ack 忘了签收       | 队列有消息却没人消费        | MANUAL 模式下每个分支都必须 ack/nack，否则 prefetch 额度被占满                                                                |
+| 消息级 TTL 队头阻塞      | 短 TTL 消息被前面的慢消息拖住 | 固定 TTL 分多个队列，或用延迟插件                                                                                         |
+| 日志里的中文乱码          | 静态中文显示成乱码         | 只是 Windows 控制台/文件是 GBK 的**显示**问题，与消息内容无关                                                                    |
+| Git Bash curl 传中文 | 服务端收到乱码           | Git Bash 按 GBK 编码 URL 参数，测试请用浏览器或 Postman                                                                   |
