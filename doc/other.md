@@ -24,6 +24,21 @@ taskkill /F /PID 12345
 
 ---
 ## DB相关
+###  EXISTS 说明
+判断子查询是否存在至少一条符合条件的记录。
+ ``` sql
+SELECT * FROM Person
+WHERE EXISTS (
+    SELECT 1
+    FROM Person2
+    WHERE Person2.id = Person.id
+);
+ ```
+- `EXISTS`：存在则返回 `TRUE`，不存在则返回 `FALSE`。
+- `SELECT 1`：表示只需要判断记录是否存在，不关心具体查询结果。
+- `WHERE EXISTS`：只保留满足存在条件的外层记录。
+
+
 ### MySQL 递归查询（WITH RECURSIVE）
 
 ```sql
