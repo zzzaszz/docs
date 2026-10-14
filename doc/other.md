@@ -37,7 +37,22 @@ WHERE EXISTS (
 - `EXISTS`：存在则返回 `TRUE`，不存在则返回 `FALSE`。
 - `SELECT 1`：表示只需要判断记录是否存在，不关心具体查询结果。
 - `WHERE EXISTS`：只保留满足存在条件的外层记录。
+EXISTS 与 NOT EXISTS 
 
+| 写法                 | 含义         |
+| ------------------ | ---------- |
+| `EXISTS (...)`     | 存在符合条件的记录  |
+| `NOT EXISTS (...)` | 不存在符合条件的记录 |
+比如删除重复数据sql
+```sql
+DELETE FROM Person
+WHERE EXISTS (
+    SELECT 1
+    FROM Person AS Person2
+    WHERE Person2.email = Person.email
+      AND Person2.id < Person.id
+);
+```
 
 ### MySQL 递归查询（WITH RECURSIVE）
 
