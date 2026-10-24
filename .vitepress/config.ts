@@ -71,6 +71,7 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: '前端', link: '/doc/web' },
       { text: '后端', link: '/doc/svc' },
+      { text: '硬件', link: '/doc/hardware' },
       { text: 'DB / 其他', link: '/doc/other' },
       { text: '相关问题', link: '/doc/question' },
       {
@@ -84,6 +85,7 @@ export default defineConfig({
     sidebar: {
       '/doc/web':      autoSidebar('doc/web.md',      '前端'),
       '/doc/svc':      autoSidebar('doc/svc.md',      '后端'),
+      '/doc/hardware': autoSidebar('doc/hardware.md', '硬件'),
       '/doc/other':    autoSidebar('doc/other.md',    'DB / 其他'),
       '/doc/question': autoSidebar('doc/question.md', '相关问题'),
       '/tools/': [
