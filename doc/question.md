@@ -85,196 +85,6 @@ public class HikariPoolProperties extends HikariConfig {
 
 ---
 
-## 后端大量数据处理方案（MyBatis BATCH 模式）
-
-### 说明
-
-`ExecutorType.BATCH` 是 MyBatis 提供的批处理模式，用于批量执行 INSERT、UPDATE、DELETE 操作。它会缓存 SQL 并在适当时机统一提交，从而减少数据库交互次数。
-
-```java
-sqlSessionFactory.openSession(ExecutorType.BATCH, false);
-```
-
-**参数说明：**
-- `ExecutorType.BATCH`：启用批处理模式
-- `false`：关闭自动提交，由程序手动控制事务
-
-### 完整示例
-
-```java
-@Transactional(rollbackFor = Exception.class)
-public String syncAreaQtyBatch(String misizetoareaqty, String tenantid) {
-
-    // 1. 参数校验
-    if (StringUtils.isBlank(misizetoareaqty)) {
-        throw new IllegalArgumentException("VM计算公式不能为空！");
-    }
-    if (StringUtils.isBlank(tenantid)) {
-        throw new IllegalArgumentException("租户ID不能为空！");
-    }
-
-    // 2. 查询数据
-    List<MatSpecpcbPojo> list =
-            this.matSpecpcbMapper.getListByTenantId(tenantid);
-
-    if (list == null || list.isEmpty()) {
-        throw new IllegalArgumentException("未找到可修改的规格数据！");
-    }
-
-    final int BATCH_SIZE = 500;
-    int successCount = 0;
-    int failCount = 0;
-
-    List<String> specNames = new ArrayList<>();
-
-    SqlSession sqlSession = null;
-
-    try {
-        // 3. 开启 MyBatis BATCH 模式
-        sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
-        MatGoodsMapper batchMapper = sqlSession.getMapper(MatGoodsMapper.class);
-        int batchCount = 0;
-
-        for (MatSpecpcbPojo pojo : list) {
-            try {
-                // 渲染并计算 VM
-                String renderedResult = SpecVelocityUtils.renderAndCalculate(
-                        misizetoareaqty,
-                        JSON.toJSONString(pojo)
-                );
-                if (StringUtils.isBlank(renderedResult)) {
-                    continue;
-                }
-                JSONObject jsonObject = JSON.parseObject(renderedResult);
-
-                if (jsonObject.containsKey("areaqty")) {
-                    pojo.setAreaqty(jsonObject.getDouble("areaqty"));
-                }
-                if (jsonObject.containsKey("areaunit")) {
-                    pojo.setAreaunit(jsonObject.getString("areaunit"));
-                }
-
-                // 批量更新
-                batchMapper.updateGoodsSpecidAndPcsX(pojo);
-                successCount++;
-                batchCount++;
-
-                // 达到批量大小时刷新
-                if (batchCount % BATCH_SIZE == 0) {
-                    sqlSession.flushStatements();
-                    sqlSession.clearCache();
-                }
-            } catch (Exception e) {
-                failCount++;
-                specNames.add(pojo.getItemcode());
-                logger.error("规格ID：{} 计算失败：{}",
-                        pojo.getId(), e.getMessage(), e);
-            }
-        }
-
-        // 刷新剩余 SQL
-        List<BatchResult> results = sqlSession.flushStatements();
-        sqlSession.commit();
-        logger.info("批处理执行完成，共生成 {} 个批次。", results.size());
-    } catch (Exception e) {
-        if (sqlSession != null) {
-            sqlSession.rollback();
-        }
-        throw new RuntimeException("批量同步失败", e);
-    } finally {
-        if (sqlSession != null) {
-            sqlSession.close();
-        }
-    }
-
-    // 4. 组装返回结果
-    StringBuilder result = new StringBuilder();
-    result.append("同步完成：成功 ")
-            .append(successCount)
-            .append(" 条，失败 ")
-            .append(failCount)
-            .append(" 条");
-
-    if (!specNames.isEmpty()) {
-        result.append("；失败规格编码：")
-                .append(String.join("、", specNames));
-    }
-
-    logger.info(result.toString());
-    return result.toString();
-}
-```
-
-### Mapper XML
-
-```xml
-<update id="updateGoodsSpecidAndPcsX">
-    update Mat_Goods
-    set Specid   = #{id},
-        PcsX     = #{pcsx},
-        PcsY     = #{pcsy},
-        SizeUnit = #{sizeunit},
-        SetX     = #{setx},
-        SetY     = #{sety},
-        Set2Pcs  = #{set2pcs},
-        PnlX     = #{pnlx},
-        PnlY     = #{pnly},
-        Pnl2Pcs  = #{pnl2pcs},
-        AreaQty  = #{areaqty},
-        AreaUnit = #{areaunit}
-    where id = #{goodsid}
-      and Tenantid = #{tenantid}
-</update>
-```
-
----
-
-## 后端中等数据更新处理方案（CASE WHEN 批量更新）
-
-适合几百到几千条数据的批量更新场景，一条 SQL 搞定，比逐条更新效率高很多。
-
-```xml
-<update id="batchUpdateGoodsInfo">
-    <!-- 批量更新货品信息 -->
-    UPDATE MatCamproject
-    <set>
-        GoodsUid = CASE id
-        <foreach collection="list" item="item">
-            WHEN #{item.id} THEN #{item.goodsuid}
-        </foreach>
-        END,
-
-        GoodsName = CASE id
-        <foreach collection="list" item="item">
-            WHEN #{item.id} THEN #{item.goodsname}
-        </foreach>
-        END,
-
-        GoodsSpec = CASE id
-        <foreach collection="list" item="item">
-            WHEN #{item.id} THEN #{item.goodsspec}
-        </foreach>
-        END,
-
-        ModifyDate = CASE id
-        <foreach collection="list" item="item">
-            WHEN #{item.id} THEN #{item.modifydate}
-        </foreach>
-        END,
-
-        Revision = CASE id
-        <foreach collection="list" item="item">
-            WHEN #{item.id} THEN #{item.revision}
-        </foreach>
-        END
-    </set>
-    WHERE Tid = #{tid}
-    AND id IN
-    <foreach collection="list" item="item" open="(" separator="," close=")">
-        #{item.id}
-    </foreach>
-</update>
-```
 
 ---
 ## Redis 按半小时构建每天的预警列表
@@ -689,7 +499,6 @@ CentOS 7.9 / 2 核 1.7G / Docker 26 + Compose v2。五个应用各自独立目�
 ## 服务器各应用 docker-compose 配置
 
 五个 stack 各自独立目录、独立 compose 文件，互不干扰。统一 `restart: unless-stopped`，配合 Docker 服务 enabled 实现开机自启与崩溃重启；Web 端口只绑 `127.0.0.1`。
-
 ### qqbot：AstrBot + SnowLuma
 
 **作用**：SnowLuma 是 QQ 协议端（跑 NTQQ + noVNC 桌面用于扫码），AstrBot 是机器人框架，通过 aiocqhttp 反向 WS 连接 SnowLuma。两者建在同一个 bridge 网络 `qqbot` 上，靠服务名互访，网关端口（3000/3001/6199）不发布到宿主机。
@@ -810,7 +619,6 @@ volumes:
 ```
 
 **注意**：`network_mode: host` 会绕开 compose 的端口绑定，镜像默认监听 `*:19999`，必须手动在 `/etc/netdata/netdata.conf` 写 `[web]` 段 `bind to = 127.0.0.1`，否则监控数据对整个网络可见（Netdata 无认证）。
-
 **界面截图**：
 ![](static/Pasted%20image%2020261104141025.png)
 ### dozzle：容器日志
@@ -883,3 +691,198 @@ services:
 
 **界面截图**：
 ![](static/Pasted%20image%2020261104141315.png)
+
+---
+
+## 后端大量数据处理方案（MyBatis BATCH 模式）
+
+### 说明
+
+`ExecutorType.BATCH` 是 MyBatis 提供的批处理模式，用于批量执行 INSERT、UPDATE、DELETE 操作。它会缓存 SQL 并在适当时机统一提交，从而减少数据库交互次数。
+
+```java
+sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+```
+
+**参数说明：**
+- `ExecutorType.BATCH`：启用批处理模式
+- `false`：关闭自动提交，由程序手动控制事务
+
+### 完整示例
+
+```java
+@Transactional(rollbackFor = Exception.class)
+public String syncAreaQtyBatch(String misizetoareaqty, String tenantid) {
+
+    // 1. 参数校验
+    if (StringUtils.isBlank(misizetoareaqty)) {
+        throw new IllegalArgumentException("VM计算公式不能为空！");
+    }
+    if (StringUtils.isBlank(tenantid)) {
+        throw new IllegalArgumentException("租户ID不能为空！");
+    }
+
+    // 2. 查询数据
+    List<MatSpecpcbPojo> list =
+            this.matSpecpcbMapper.getListByTenantId(tenantid);
+
+    if (list == null || list.isEmpty()) {
+        throw new IllegalArgumentException("未找到可修改的规格数据！");
+    }
+
+    final int BATCH_SIZE = 500;
+    int successCount = 0;
+    int failCount = 0;
+
+    List<String> specNames = new ArrayList<>();
+
+    SqlSession sqlSession = null;
+
+    try {
+        // 3. 开启 MyBatis BATCH 模式
+        sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+        MatGoodsMapper batchMapper = sqlSession.getMapper(MatGoodsMapper.class);
+        int batchCount = 0;
+
+        for (MatSpecpcbPojo pojo : list) {
+            try {
+                // 渲染并计算 VM
+                String renderedResult = SpecVelocityUtils.renderAndCalculate(
+                        misizetoareaqty,
+                        JSON.toJSONString(pojo)
+                );
+                if (StringUtils.isBlank(renderedResult)) {
+                    continue;
+                }
+                JSONObject jsonObject = JSON.parseObject(renderedResult);
+
+                if (jsonObject.containsKey("areaqty")) {
+                    pojo.setAreaqty(jsonObject.getDouble("areaqty"));
+                }
+                if (jsonObject.containsKey("areaunit")) {
+                    pojo.setAreaunit(jsonObject.getString("areaunit"));
+                }
+
+                // 批量更新
+                batchMapper.updateGoodsSpecidAndPcsX(pojo);
+                successCount++;
+                batchCount++;
+
+                // 达到批量大小时刷新
+                if (batchCount % BATCH_SIZE == 0) {
+                    sqlSession.flushStatements();
+                    sqlSession.clearCache();
+                }
+            } catch (Exception e) {
+                failCount++;
+                specNames.add(pojo.getItemcode());
+                logger.error("规格ID：{} 计算失败：{}",
+                        pojo.getId(), e.getMessage(), e);
+            }
+        }
+
+        // 刷新剩余 SQL
+        List<BatchResult> results = sqlSession.flushStatements();
+        sqlSession.commit();
+        logger.info("批处理执行完成，共生成 {} 个批次。", results.size());
+    } catch (Exception e) {
+        if (sqlSession != null) {
+            sqlSession.rollback();
+        }
+        throw new RuntimeException("批量同步失败", e);
+    } finally {
+        if (sqlSession != null) {
+            sqlSession.close();
+        }
+    }
+
+    // 4. 组装返回结果
+    StringBuilder result = new StringBuilder();
+    result.append("同步完成：成功 ")
+            .append(successCount)
+            .append(" 条，失败 ")
+            .append(failCount)
+            .append(" 条");
+
+    if (!specNames.isEmpty()) {
+        result.append("；失败规格编码：")
+                .append(String.join("、", specNames));
+    }
+
+    logger.info(result.toString());
+    return result.toString();
+}
+```
+
+### Mapper XML
+
+```xml
+<update id="updateGoodsSpecidAndPcsX">
+    update Mat_Goods
+    set Specid   = #{id},
+        PcsX     = #{pcsx},
+        PcsY     = #{pcsy},
+        SizeUnit = #{sizeunit},
+        SetX     = #{setx},
+        SetY     = #{sety},
+        Set2Pcs  = #{set2pcs},
+        PnlX     = #{pnlx},
+        PnlY     = #{pnly},
+        Pnl2Pcs  = #{pnl2pcs},
+        AreaQty  = #{areaqty},
+        AreaUnit = #{areaunit}
+    where id = #{goodsid}
+      and Tenantid = #{tenantid}
+</update>
+```
+
+---
+
+## 后端中等数据更新处理方案（CASE WHEN 批量更新）
+
+适合几百到几千条数据的批量更新场景，一条 SQL 搞定，比逐条更新效率高很多。
+
+```xml
+<update id="batchUpdateGoodsInfo">
+    <!-- 批量更新货品信息 -->
+    UPDATE MatCamproject
+    <set>
+        GoodsUid = CASE id
+        <foreach collection="list" item="item">
+            WHEN #{item.id} THEN #{item.goodsuid}
+        </foreach>
+        END,
+
+        GoodsName = CASE id
+        <foreach collection="list" item="item">
+            WHEN #{item.id} THEN #{item.goodsname}
+        </foreach>
+        END,
+
+        GoodsSpec = CASE id
+        <foreach collection="list" item="item">
+            WHEN #{item.id} THEN #{item.goodsspec}
+        </foreach>
+        END,
+
+        ModifyDate = CASE id
+        <foreach collection="list" item="item">
+            WHEN #{item.id} THEN #{item.modifydate}
+        </foreach>
+        END,
+
+        Revision = CASE id
+        <foreach collection="list" item="item">
+            WHEN #{item.id} THEN #{item.revision}
+        </foreach>
+        END
+    </set>
+    WHERE Tid = #{tid}
+    AND id IN
+    <foreach collection="list" item="item" open="(" separator="," close=")">
+        #{item.id}
+    </foreach>
+</update>
+```
+
+---
