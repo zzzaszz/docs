@@ -357,3 +357,86 @@
 .vp-doc .qr-tool img {
   cursor: auto;
 }
+
+/* ---------- 标题展开/折叠（逻辑见 components/HeadingCollapse.vue） ---------- */
+.vp-doc .hc-heading {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.vp-doc .hc-heading:hover {
+  color: var(--vp-c-brand-1);
+}
+
+/* 展开/折叠箭头：放在标题文字左侧，常态可见，做成小按钮样式 */
+.vp-doc .hc-heading .hc-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-default-soft);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.vp-doc .hc-heading .hc-toggle:hover {
+  color: #ffffff;
+  background: var(--vp-c-brand-1);
+}
+
+.vp-doc .hc-heading .hc-toggle svg {
+  transition: transform 0.2s ease;
+}
+
+/* 折叠中的章节用主色标出来，一眼能看出哪里被收起了 */
+.vp-doc .hc-heading.hc-collapsed .hc-toggle {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+.vp-doc .hc-heading.hc-collapsed .hc-toggle:hover {
+  color: #ffffff;
+  background: var(--vp-c-brand-1);
+}
+
+.vp-doc .hc-heading.hc-collapsed .hc-toggle svg {
+  transform: rotate(-90deg);
+}
+
+/* 层级越高箭头越大，和标题字号对应 */
+.vp-doc .hc-heading .hc-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.vp-doc h2.hc-heading .hc-toggle {
+  width: 24px;
+  height: 24px;
+}
+
+.vp-doc h2.hc-heading .hc-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vp-doc h4.hc-heading .hc-toggle {
+  width: 20px;
+  height: 20px;
+}
+
+.vp-doc h4.hc-heading .hc-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 折叠后隐藏的区块 */
+.vp-doc .hc-hidden {
+  display: none !important;
+}
