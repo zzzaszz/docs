@@ -813,11 +813,11 @@ volumes:
 
 ### dozzle：容器日志
 
-**作用**：Web 查看所有容器日志，支持实时跟踪、搜索、按容器过滤，并能重启容器、检查镜像是否有新版本。
+**作用**：Web方式查看所有容器日志，支持实时跟踪、搜索、按容器过滤，并能重启容器。*<u>**注：不支持账号密码登录，无法更新到指定的版本，需使用下方的dockge。**</u>*
 
 **关键配置**：
 
-- `DOZZLE_ENABLE_ACTIONS=true`：开启操作按钮，没有这个就只能看不能动
+- `DOZZLE_ENABLE_ACTIONS=true`：开启操作按钮，重启停止
 - `/var/run/docker.sock` 挂载**不能加 `:ro`**：重启容器、拉镜像是写操作
 - `DOZZLE_FILTER: "status=running"`：只显示运行中的容器
 - `DOZZLE_IMAGE_CHECK_MODE=automatic`：自动检查镜像版本，只提示不自动重建
@@ -844,6 +844,8 @@ services:
 
 **注意**：镜像必须写死版本号，`latest` 在这台机器上会拉到 2021 年的 v3.10.1（镜像加速站缓存）。另外「自动更新」保持关闭，避免半夜重建 SnowLuma 导致密码失效。
 
+**界面截图**：
+![](static/Pasted%20image%2020261104140817.png)
 ### dockge：compose 可视化管理
 
 **作用**：Web 管理所有 compose stack，可查看/编辑 compose 文件、启停重启整个 stack、看日志，开了 Console 后还能进容器 shell 执行命令。
