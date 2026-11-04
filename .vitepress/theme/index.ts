@@ -2,6 +2,7 @@ import DefaultTheme from 'vitepress/theme'
 import type { Theme } from 'vitepress'
 import './custom.css'
 
+import Layout from './Layout.vue'
 import ToolGrid from './components/ToolGrid.vue'
 import TimezoneTool from './components/TimezoneTool.vue'
 import TimestampTool from './components/TimestampTool.vue'
@@ -15,6 +16,7 @@ import UuidHashJwtTool from './components/UuidHashJwtTool.vue'
 
 export default {
   extends: DefaultTheme,
+  Layout,
   enhanceApp({ app }) {
     app.component('ToolGrid', ToolGrid)
     app.component('TimezoneTool', TimezoneTool)

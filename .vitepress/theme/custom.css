@@ -344,3 +344,16 @@
   .vp-doc table tbody tr:hover td { background: transparent; }
   .vp-doc table tbody tr:active td { background: var(--vp-c-brand-soft); }
 }
+
+/* ---------- 正文图片点击放大（逻辑见 components/ImageZoom.vue） ---------- */
+.vp-doc img {
+  cursor: zoom-in;
+}
+
+/* 工具面板内的预览图有自己的交互，保持默认光标 */
+.vp-doc .ib-tool img,
+.vp-doc .cp-tool img,
+.vp-doc .ic-tool img,
+.vp-doc .qr-tool img {
+  cursor: auto;
+}
