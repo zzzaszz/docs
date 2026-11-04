@@ -658,55 +658,48 @@ public void onOrder(String userId) {
 - **削峰**：入口 10ms 返回，数据库由消费者按固定节奏写，不会被瞬时流量冲垮；
 - **真实秒杀是两段式**：入口扣 Redis 预扣库存挡流量，异步落库时数据库再扣一次兜底，对不上由定时任务对账补偿；
 - 消费端落库失败（连不上库、唯一键冲突）按上一节的套路处理：重试 + 死信，**别抛异常触发无限重试**。
-## 阿里云服务器应用部署（47.111.113.187）
 
-### 环境与访问方式
+## 阿里云服务器应用部署
 
-| 项       | 值                                              |
-| ------- | ---------------------------------------------- |
-| 系统      | CentOS Linux 7.9.2009 (Core)，内核 3.10           |
-| 配置      | 2 核 / 1.7G 内存 / 40G 磁盘（已有 4G swap）             |
-| Docker  | 26.1.4，`systemctl is-enabled docker` = enabled |
-| Compose | v2.27.1                                        |
-| 其他      | x86_64，cgroup v1，overlay2                      |
+CentOS 7.9 / 2 核 1.7G / Docker 26 + Compose v2。五个应用各自独立目录 + compose 文件，均为 `restart: unless-stopped`，配合 Docker 服务 enabled 实现开机自启。
 
-**端口策略**：所有 Web 服务只绑 `127.0.0.1`，本地通过 SSH 隧道访问，不对公网暴露。网关端口（AstrBot 6199、SnowLuma 3000/3001）不发布到宿主机，只在 Docker 网络 `qqbot` 内互通。
+| 应用       | 用途                                  | 本地访问                                   |
+| -------- | ----------------------------------- | -------------------------------------- |
+| AstrBot  | QQ 机器人框架，aiocqhttp 反向 WS 接 SnowLuma | http://127.0.0.1:6185                  |
+| SnowLuma | QQ 协议端，noVNC 扫码登录                   | http://127.0.0.1:6081（桌面）/ 5099（WebUI） |
+| Netdata  | 系统与容器监控                             | http://127.0.0.1:19999                 |
+| Dozzle   | 容器日志查看                              | http://127.0.0.1:8888                  |
+| Dockge   | compose 可视化管理                       | http://127.0.0.1:5001                  |
 
-| 应用 | 用途 | 宿主机端口 | 本地隧道端口 |
-|---|---|---|---|
-| AstrBot | QQ 机器人框架 | 36185 → 容器 6185 | 127.0.0.1:6185 |
-| SnowLuma | QQ 协议端 + noVNC 桌面 | 6081 / 5099 | 127.0.0.1:6081 / 5099 |
-| Netdata | 系统与容器监控 | 19999 | 127.0.0.1:19999 |
-| Dozzle | 容器日志查看 | 8888 | 127.0.0.1:8888 |
-| Dockge | compose 可视化管理 | 5001 | 127.0.0.1:5001 |
+目录：`/opt/qqbot`、`/opt/netdata`、`/opt/dozzle`、`/opt/dockge`。所有 Web 端口只绑 127.0.0.1，不对公网开放。
 
-本地连接推荐直接用脚本 `start-qqbot-tunnel.ps1` 一键搞定（准备密钥、检查端口占用、建立全部六路转发，详见第八节）。也可以手动执行：
+**本地连接**：运行 `start-qqbot-tunnel.ps1`，前台保持、Ctrl+C 断开；脚本自动准备密钥、检查端口占用、建立六路转发。
 
-隧道命令（注意 AstrBot 本地 6185 指向服务器 **36185**，不是 6185）：
+**踩坑**：
 
-```powershell
-ssh -i ~/.ssh/aliyun_zzz1030.pem -N `
-  -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes `
-  -L 127.0.0.1:6185:127.0.0.1:36185 `
-  -L 127.0.0.1:6081:127.0.0.1:6081 `
-  -L 127.0.0.1:5099:127.0.0.1:5099 `
-  -L 127.0.0.1:19999:127.0.0.1:19999 `
-  -L 127.0.0.1:8888:127.0.0.1:8888 `
-  -L 127.0.0.1:5001:127.0.0.1:5001 `
-  root@47.111.113.187
-```
-
-所有 stack 均为独立目录 + 独立 compose 文件，`restart: unless-stopped`，配合 Docker 服务 enabled 实现开机自启与崩溃自动重启。
+- **镜像 `latest` 会拉到旧版**：加速站缓存不一致，Dozzle 的 latest 曾给出 2021 年的 v3.10.1。部署要固定版本号并核对 `docker inspect` 的 `Created`。
+- **SnowLuma 初始密码每次重建都变**：用 `docker logs snowluma | grep "initial credentials" | tail -1` 取，登录后第一件事是改密。
+- **noVNC 报密码错误不一定是密码错**：容器内 x11vnc 没开 `-shared`，同一时刻只允许一个客户端，旧会话没释放时新连接被拒。
+- **Dockge 管理员无法预置**：setup 走的是 socket.io 事件不是 REST 接口，只能在首次打开页面时手动设置。
+- **PowerShell 脚本要存 UTF-8 with BOM**：否则 PowerShell 5.1 按 GBK 解码中文，报「字符串缺少终止符」。
+- **`docker exec` 偶发挂起**：命令前加 `timeout`。
+- **阿里云安全组**：服务器内部监听正常但外网超时，基本都是安全组没放行。
 
 ---
+## 服务器各应用 docker-compose 配置
 
-### 一、AstrBot（QQ 机器人框架）
+五个 stack 各自独立目录、独立 compose 文件，互不干扰。统一 `restart: unless-stopped`，配合 Docker 服务 enabled 实现开机自启与崩溃重启；Web 端口只绑 `127.0.0.1`。
 
-**介绍**：多平台聊天机器人框架，支持 LLM 对话、插件、多平台适配。本项目用它接 QQ，通过 aiocqhttp（OneBot v11）反向 WebSocket 连接 SnowLuma。
+### qqbot：AstrBot + SnowLuma
 
-**访问**：http://127.0.0.1:6185（隧道）。初始账号 `astrbot`，初始密码 `plL4gMuDczsz7KPU8CA6s9ON`，首次登录会提示改密。
+**作用**：SnowLuma 是 QQ 协议端（跑 NTQQ + noVNC 桌面用于扫码），AstrBot 是机器人框架，通过 aiocqhttp 反向 WS 连接 SnowLuma。两者建在同一个 bridge 网络 `qqbot` 上，靠服务名互访，网关端口（3000/3001/6199）不发布到宿主机。
 
-**编排**：`/opt/qqbot/docker-compose.yml`（与 SnowLuma 同一 stack）
+**关键配置**：
+
+- `shm_size: 1gb`、`cap_add: SYS_PTRACE`、`seccomp=unconfined`：Chromium 运行必需，少了起不来
+- `VNC_PASSWD`：noVNC 桌面密码
+- `./snowluma/start.sh:/root/start.sh:ro`：覆盖容器内启动脚本，给 x11vnc 补 `-shared`，否则同一时刻只能一个客户端连，重连会被拒并显示成「密码错误」
+- 三个命名卷持久化 QQ 登录态、客户端配置与数据，重建容器不丢登录
 
 ```yaml
 services:
@@ -768,79 +761,18 @@ networks:
     driver: bridge
 ```
 
-**平台配置**：`/opt/qqbot/astrbot/data/cmd_config.json` 的 `platform` 数组：
+**注意**：AstrBot 宿主端口是 `36185`（映射到容器 6185），隧道和访问地址都要按 36185 算。SnowLuma 用 `latest`，升级时务必固定版本号。
 
-```json
-[{
-  "type": "aiocqhttp",
-  "enable": true,
-  "id": "snowluma",
-  "name": "SnowLuma-QQ",
-  "ws_reverse_host": "0.0.0.0",
-  "ws_reverse_port": 6199,
-  "ws_reverse_token": "2chBQXgbJTygy1Fj8MWE0DASoe0ttfK"
-}]
-```
+### netdata：系统与容器监控
 
-**踩坑**：
+**作用**：采集宿主机 CPU / 内存 / 磁盘 / 网络，同时通过 cgroup 采集每个容器的资源占用（图表名直接是 `cgroup_astrbot.*`、`cgroup_snowluma.*`）。自带告警，适合盯 swap 和内存趋势。
 
-- `cmd_config.json` 带 UTF-8 BOM，脚本读写必须用 `encoding='utf-8-sig'`，否则 JSON 解析失败；原 `platform` 是空数组 `[]`，不自己写进去平台不会启动。
-- 6199 是反向 WS 服务端端口，**不需要**发布到宿主机，SnowLuma 通过容器名 `astrbot` 在 Docker 网络内连接即可。
-- 容器内没有 `ss`、`netstat`，判断 6199 是否监听要用 `docker exec astrbot python3 -c` 做 socket 探测。
-- 镜像 tag 是 `latest`，实际版本 v4.29.3。升级前务必固定版本号，原因见「通用踩坑」的镜像缓存问题。
+**关键配置**：
 
----
-
-### 二、SnowLuma（QQ 协议端）
-
-**介绍**：基于 NTQQ 协议的 QQ 机器人协议端，提供 OneBot v11 接口（HTTP / 正向 WS / 反向 WS）和一个可通过 noVNC 远程操作的桌面（Chromium），用于扫码登录 QQ。
-
-**访问**：
-
-| 入口 | 地址 | 凭据 |
-|---|---|---|
-| noVNC 扫码桌面 | http://127.0.0.1:6081 | 密码 `xBUruHbj`（VNC_PASSWD） |
-| WebUI 面板 | http://127.0.0.1:5099 | 单框输入访问令牌，即 WebUI 密码 |
-
-WebUI **没有用户名字段**，登录框只有一个「输入访问令牌」，对应 `POST /api/login {"password":"..."}`。初始密码从日志取：
-
-```bash
-docker logs snowluma | grep "initial credentials" | tail -1
-```
-
-**扫码登录 QQ**：打开 6081 → 输入 VNC 密码 → 在桌面里用手机 QQ 扫码 → 手机确认。登录成功后 SnowLuma 才会创建 OneBot 实例，此时 3000/3001 才开始监听。
-
-**链路配置**：`/app/data/config/onebot.json` 的 `networks.wsClients`：
-
-```json
-[{
-  "name": "astrbot",
-  "url": "ws://astrbot:6199/ws",
-  "role": "Universal",
-  "accessToken": "2chBQXgbJTygy1Fj8MWE0DASoe0ttfK",
-  "reconnectIntervalMs": 5000,
-  "enabled": true
-}]
-```
-
-**踩坑**（重点）：
-
-- **初始密码每次重建都会变**。只要没在 WebUI 里改过密码（`mustChangePassword: true` 还没处理），每次重启/重建容器都会重新生成随机密码。所以首次登录第一件事就是改密，否则下次重建又得去翻日志。
-- **noVNC 提示「密码错误」不一定是密码错**。容器内 `/root/start.sh` 启动 x11vnc 时没带 `-shared`，同一时刻只允许一个客户端，旧会话没释放时新连接会被拒绝，noVNC 把这个显示成密码错误。修复是把 `-forever -threads -rfbauth` 改成 `-forever -threads -shared -rfbauth`，并把改好的 start.sh 挂载进容器持久化（否则重建就还原）。
-- WebUI 首次登录要同意 EULA/隐私协议，不点同意面板是锁着的。
-- 扫码前 `ss -lnt` 看不到 3000/3001 是**正常现象**，OneBot 实例要等 QQ 登录后才创建。
-- 容器需要 `shm_size: 1gb`、`SYS_PTRACE`、`seccomp=unconfined`，否则 Chromium 起不来。CentOS 7 没有 apparmor，`security_opt` 写 seccomp 就够，SELinux 为 Disabled，bind mount 不需要 `:z`。
-- 内存吃紧：1.7G 内存跑 Chromium 会用到 swap，被 OOM kill 时优先考虑升配。
-
----
-
-### 三、Netdata（监控）
-
-**介绍**：实时系统监控，采集 CPU、内存、磁盘、网络、进程，以及每个 Docker 容器的 cgroup 指标。自带告警。
-
-**访问**：http://127.0.0.1:19999
-
-**编排**：`/opt/netdata/docker-compose.yml`
+- `network_mode: host` + `pid: host`：要采集宿主网卡和 Docker cgroup，必须共享宿主网络与 PID 命名空间
+- `mem_limit: 512m`：自身限制，实测只占 56MB
+- `/sys:/host/sys:ro`、`/var/run/docker.sock:ro`：容器监控依赖这两个挂载
+- `security_opt: seccomp=unconfined`：CentOS 7 无 apparmor，写 seccomp 即可
 
 ```yaml
 services:
@@ -877,31 +809,18 @@ volumes:
   netdatacache:
 ```
 
-**必须手动改绑定地址**。镜像默认监听 `*:19999`，而 Netdata 没有任何认证，任何人能访问就能看到服务器全部运行数据。启动后要往 `/etc/netdata/netdata.conf` 追加：
+**注意**：`network_mode: host` 会绕开 compose 的端口绑定，镜像默认监听 `*:19999`，必须手动在 `/etc/netdata/netdata.conf` 写 `[web]` 段 `bind to = 127.0.0.1`，否则监控数据对整个网络可见（Netdata 无认证）。
 
-```ini
-[web]
-    bind to = 127.0.0.1
-```
+### dozzle：容器日志
 
-然后重启容器。
+**作用**：Web 查看所有容器日志，支持实时跟踪、搜索、按容器过滤，并能重启容器、检查镜像是否有新版本。
 
-**踩坑**：
+**关键配置**：
 
-- `network_mode: host` 是为了采集宿主机网卡；容器自身端口限制就失效了，只能靠 netdata 自己的 `bind to` 收口。
-- 要监控 Docker 容器，必须同时有 `pid: host`、`/sys:/host/sys:ro`、`/var/run/docker.sock:ro`。满足后日志里会出现 `cgroup 'docker_xxx' is called 'astrbot'`，图表名直接是 `cgroup_astrbot.cpu`、`cgroup_snowluma.mem`，而不是一串 sha256。
-- 实测资源占用 56MB（`mem_limit` 512m 足够），当前 102 项告警全部 normal。
-- 这台机器 swap 已用掉 1G 左右，Netdata 的内存/swap 趋势图是判断是否该升配的主要依据。
-
----
-
-### 四、Dozzle（日志查看）
-
-**介绍**：轻量 Web 日志查看器，可实时看所有容器日志、搜索、按容器过滤，并支持重启容器、检查镜像更新。
-
-**访问**：http://127.0.0.1:8888
-
-**编排**：`/opt/dozzle/docker-compose.yml`
+- `DOZZLE_ENABLE_ACTIONS=true`：开启操作按钮，没有这个就只能看不能动
+- `/var/run/docker.sock` 挂载**不能加 `:ro`**：重启容器、拉镜像是写操作
+- `DOZZLE_FILTER: "status=running"`：只显示运行中的容器
+- `DOZZLE_IMAGE_CHECK_MODE=automatic`：自动检查镜像版本，只提示不自动重建
 
 ```yaml
 services:
@@ -923,29 +842,18 @@ services:
       DOZZLE_IMAGE_CHECK_MODE: "automatic"
 ```
 
-**踩坑**：
+**注意**：镜像必须写死版本号，`latest` 在这台机器上会拉到 2021 年的 v3.10.1（镜像加速站缓存）。另外「自动更新」保持关闭，避免半夜重建 SnowLuma 导致密码失效。
 
-- **`latest` 拉到了 2021 年的旧镜像**。这台服务器 daemon.json 配了 9 个 registry-mirrors，`docker pull amir20/dozzle:latest` 得到的镜像是 `Created=2021-12-01`，实际版本 v3.10.1。改用固定 tag `v11.4.0` 才正常。**部署任何镜像都要固定版本号并核对 `docker inspect` 的 `Created` 时间**。
-- `DOZZLE_TAILSIZE` 在 v11 已移除，写了会打 `Unexpected environment variable` 警告。
-- 要让「重启容器、检查更新」可用，必须 `DOZZLE_ENABLE_ACTIONS=true`，并且 docker.sock 挂载**不能加 `:ro`**（重启/拉镜像是写操作）。
-- `DOZZLE_IMAGE_CHECK_MODE=automatic` 只做镜像版本检查提示，不会自动重建容器；真正的自动更新要配 `DOZZLE_AUTO_UPDATE`，默认建议保持 off，否则凌晨重建 SnowLuma 会让密码失效。
-- 验证配置是否生效：
+### dockge：compose 可视化管理
 
-```bash
-curl -s http://127.0.0.1:8888/ | sed -n '/config__json/,/<\/script>/p'
-```
+**作用**：Web 管理所有 compose stack，可查看/编辑 compose 文件、启停重启整个 stack、看日志，开了 Console 后还能进容器 shell 执行命令。
 
-输出里应有 `"enableActions":true,"enableUpdates":true,"enableShell":false`。
+**关键配置**：
 
----
-
-### 五、Dockge（compose 编排）
-
-**介绍**：可视化管理 docker compose stack，可编辑 compose 文件、启停/重启 stack、查看日志，1.5.0 起支持容器内终端（Console）。
-
-**访问**：http://127.0.0.1:5001。首次访问会进入 setup 页面，自行设置管理员用户名和密码（Dockge 无默认账号）。
-
-**编排**：`/opt/dockge/docker-compose.yml`
+- `DOCKGE_STACKS_DIR=/opt`：直接接管 `/opt` 下已有的四个 stack，无需迁移目录
+- `/opt:/opt`：让容器能读写这些 stack 的目录
+- `DOCKGE_ENABLE_CONSOLE=true`：开启容器内终端（1.5.0 起默认关闭）
+- `healthcheck: disable: true`：自带健康检查在这台机器上会一直卡 `starting`（exec 超时），关掉避免误判
 
 ```yaml
 services:
@@ -967,199 +875,4 @@ services:
       DOCKGE_ENABLE_CONSOLE: "true"
 ```
 
-`DOCKGE_STACKS_DIR=/opt` 让 Dockge 直接识别 `/opt` 下已有的 `qqbot`、`netdata`、`dozzle`、`dockge` 四个 stack，不用迁移目录（迁移会重建容器，触发 SnowLuma 换密码）。它只显示含 compose 文件的目录。
-
-**踩坑**：
-
-- **管理员账号无法用 API 预置**。`POST /api/setup` 返回 404，setup 实际是 socket.io 事件（`/app/backend/socket-handlers/main-socket-handler.ts:30` 的 `socket.on("setup", ...)`），只能在浏览器首次打开时手动设置。
-- 1.5.0 起 **Console 默认关闭**，要在 compose 里加 `DOCKGE_ENABLE_CONSOLE=true` 并重建容器，再刷新页面才会出现终端入口。这个终端等于容器内 root shell，且挂着宿主机的 docker.sock，能操作全部容器，也能 `rm -rf` 掉自己。
-- 自带 healthcheck（`extra/healthcheck`）在这台机器上会一直卡在 `starting`，日志是 `timed out starting health check`（Docker 启动 exec 超时），已用 `healthcheck.disable: true` 关掉，不影响功能。
-- 重建 Dockge 容器不会踢掉登录状态，JWT secret 存在 `/opt/dockge/data/` 的 sqlite 里。
-- 与 Dozzle 同理，它拥有容器管理权，只监听回环、走隧道。
-
----
-
-### 六、通用踩坑
-
-**1. 镜像加速站会缓存旧 `latest`**
-
-daemon.json 配了多个 registry-mirrors，`latest` 和具体版本 tag 的缓存行为不一致，可能拉到几年前的镜像。规避方法：
-
-```bash
-docker pull <image>:<具体版本>
-docker inspect --format '{{.Created}}' <image>:<tag>   # 核对创建时间
-```
-
-**2. 隧道端口和宿主机端口不是一回事**
-
-AstrBot 容器内是 6185，但 compose 映射成宿主机 `36185:6185`，隧道必须写 `-L 127.0.0.1:6185:127.0.0.1:36185`。改过 compose 端口后要同步改隧道，否则本地连不上。
-
-**3. 2G 内存跑 Chromium 会吃 swap**
-
-SnowLuma 的 Chromium + AstrBot 常驻约 900M，swap 已用 1G 左右。内存紧张时优先用 Netdata 看趋势，必要时升配。
-
-**4. 阿里云安全组**
-
-服务器内部 `ss -lntp` 显示 `*:36185` 监听、本机访问 200，但外网超时，说明挡在安全组。需要放行对应端口（TCP）后外网才能通。firewalld 为 inactive、iptables INPUT ACCEPT，服务器侧无拦截。
-
-**5. Windows 运行 PowerShell 脚本报「字符串缺少终止符」**
-
-脚本如果是**无 BOM 的 UTF-8**，Windows PowerShell 5.1 会按本地 GBK 解码，中文注释乱码导致引号配对错乱。写文件时指定 BOM：
-
-```powershell
-[System.IO.File]::WriteAllText($path, $content, (New-Object System.Text.UTF8Encoding($true)))
-```
-
-**6. `docker exec` 偶发挂起**
-
-这台机器上 `docker exec` 有概率卡住不返回（Dockge 的健康检查也因此超时）。命令前统一加 `timeout`：
-
-```bash
-timeout 20 docker exec <container> sh -c "..."
-```
-
-**7. SSH 密钥权限**
-
-Windows OpenSSH 对 pem 文件权限校验严格，会报 `UNPROTECTED PRIVATE KEY FILE`。把密钥复制到 `~/.ssh/` 并收窄权限：
-
-```powershell
-icacls "$env:USERPROFILE\.ssh\aliyun_zzz1030.pem" /inheritance:r
-icacls "$env:USERPROFILE\.ssh\aliyun_zzz1030.pem" /grant:r "$env:USERNAME:F"
-```
-
----
-
-### 七、运维速查
-
-```bash
-# 全部 stack 状态
-for d in qqbot netdata dozzle dockge; do echo "== $d =="; (cd /opt/$d && docker compose ps); done
-
-# 启停单个 stack
-cd /opt/qqbot && docker compose up -d
-cd /opt/qqbot && docker compose restart snowluma
-cd /opt/netdata && docker compose restart netdata
-
-# 日志
-docker logs -f astrbot
-docker logs --tail 100 snowluma
-docker logs 2>&1 snowluma | grep "initial credentials" | tail -1   # 取当前初始密码
-
-# 确认端口没有对公网暴露
-ss -lntp | grep -E ":(5001|8888|19999|5099|6081|6185|6199|3000|3001)\b"
-
-# 内存与容器资源
-free -h
-docker stats --no-stream
-```
-
-**升级原则**：先确认新版版本号 → `docker compose pull` 前把 tag 改成具体版本 → 升级 SnowLuma 前先确认已在 WebUI 改过密码，否则密码会重新随机生成。
----
-
-### 八、本地连接脚本 start-qqbot-tunnel.ps1
-
-**位置**：`D:\0-caoshi\start-qqbot-tunnel.ps1`
-
-**用法**：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File D:\0-caoshi\start-qqbot-tunnel.ps1
-```
-
-窗口保持打开就是隧道在线，**按 Ctrl+C 断开**，六个本地端口随之释放。
-
-**作用**：一条命令完成「准备密钥 → 检查端口占用 → 建立六路转发 → 前台保持」。
-
-**脚本全文**：
-
-```powershell
-# 建立到阿里云 QQ 机器人服务器 (47.111.113.187) 的 SSH 隧道
-# 用途：本地访问 AstrBot 后台 / SnowLuma WebUI / noVNC 扫码桌面 / Netdata 监控 / Dozzle 日志 / Dockge 编排，服务器端口不对公网开放
-# 用法：powershell -ExecutionPolicy Bypass -File .\start-qqbot-tunnel.ps1
-# 停止：在运行窗口按 Ctrl+C
-
-$ErrorActionPreference = "Stop"
-
-$keySrc  = "D:\0-caoshi\_zzz1030.pem"
-$keyDst  = "$env:USERPROFILE\.ssh\aliyun_zzz1030.pem"
-$server  = "root@47.111.113.187"
-
-# 1. 准备密钥（OpenSSH 要求私钥不可被其他用户读取）
-if (-not (Test-Path $keyDst)) {
-    if (-not (Test-Path $keySrc)) {
-        Write-Host "找不到密钥文件: $keySrc" -ForegroundColor Red
-        exit 1
-    }
-    New-Item -ItemType Directory -Force "$env:USERPROFILE\.ssh" | Out-Null
-    Copy-Item $keySrc $keyDst -Force
-    icacls $keyDst /inheritance:r | Out-Null
-    icacls $keyDst /grant:r "$($env:USERNAME):F" | Out-Null
-    Write-Host "已准备密钥: $keyDst" -ForegroundColor Green
-}
-
-# 2. 检查本地端口是否被占用
-$ports = @{ 6185 = "AstrBot WebUI"; 6081 = "SnowLuma noVNC"; 5099 = "SnowLuma WebUI"; 19999 = "Netdata"; 8888 = "Dozzle"; 5001 = "Dockge" }
-foreach ($p in $ports.Keys) {
-    if (Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue) {
-        Write-Host "端口 $p ($($ports[$p])) 已被占用，请先关闭占用程序。" -ForegroundColor Yellow
-        exit 1
-    }
-}
-
-Write-Host "隧道建立中，本地访问地址：" -ForegroundColor Cyan
-Write-Host "  AstrBot 后台      http://127.0.0.1:6185"
-Write-Host "  SnowLuma noVNC    http://127.0.0.1:6081   (扫码登录 QQ)"
-Write-Host "  SnowLuma WebUI    http://127.0.0.1:5099"
-Write-Host "  Netdata 监控      http://127.0.0.1:19999"
-Write-Host "  Dozzle 日志       http://127.0.0.1:8888"
-Write-Host "  Dockge 编排       http://127.0.0.1:5001"
-Write-Host "按 Ctrl+C 断开隧道。" -ForegroundColor DarkGray
-
-# 3. 前台保持隧道（断开后端口随之释放）
-ssh -i $keyDst -N `
-    -o StrictHostKeyChecking=no `
-    -o ServerAliveInterval=30 `
-    -o ServerAliveCountMax=3 `
-    -o ExitOnForwardFailure=yes `
-    -L 127.0.0.1:6185:127.0.0.1:36185 `
-    -L 127.0.0.1:6081:127.0.0.1:6081 `
-    -L 127.0.0.1:5099:127.0.0.1:5099 `
-    -L 127.0.0.1:19999:127.0.0.1:19999 `
-    -L 127.0.0.1:8888:127.0.0.1:8888 `
-    -L 127.0.0.1:5001:127.0.0.1:5001 `
-    $server
-```
-
-**每一段解决的问题**：
-
-1. **密钥权限**：Windows OpenSSH 会拒绝权限过宽的私钥（报 `UNPROTECTED PRIVATE KEY FILE`）。脚本首次运行把工作区的 `_zzz1030.pem` 复制到 `~/.ssh/aliyun_zzz1030.pem`，再用 `icacls /inheritance:r` + `grant:r <用户>:F` 收窄到只有当前用户可读。工作区里的原文件不动。
-2. **端口占用预检**：六个本地端口任一被占用就直接退出并提示是哪个服务占的，避免 `bind: Address already in use` 这种看不出所以然的报错。
-3. **保活与失败退出**：`ServerAliveInterval=30` + `ServerAliveCountMax=3` 让网络抖动能在 90 秒内自愈；`ExitOnForwardFailure=yes` 保证端口转发建不起来时直接退出，不会出现「隧道连着但其实没转发」的假状态。
-4. **前台运行**：脚本不把 ssh 丢后台，关掉窗口或 Ctrl+C 就是断开，不会留下看不见的孤儿进程。
-
-**端口对照（本地 → 服务器）**：
-
-| 本地监听            | 服务器目标           | 服务                        |
-| --------------- | --------------- | ------------------------- |
-| 127.0.0.1:6185  | 127.0.0.1:36185 | AstrBot 后台（**注意不是 6185**） |
-| 127.0.0.1:6081  | 127.0.0.1:6081  | SnowLuma noVNC（扫码登录 QQ）   |
-| 127.0.0.1:5099  | 127.0.0.1:5099  | SnowLuma WebUI            |
-| 127.0.0.1:19999 | 127.0.0.1:19999 | Netdata 监控                |
-| 127.0.0.1:8888  | 127.0.0.1:8888  | Dozzle 日志                 |
-| 127.0.0.1:5001  | 127.0.0.1:5001  | Dockge 编排                 |
-
-**使用注意**：
-
-- 脚本必须**前台运行**。想开机自动连，可以给它建计划任务，或用 `Start-Process powershell -ArgumentList "-File <路径>"` 起一个独立窗口。
-- 端口占用检查依赖 `Get-NetTCPConnection`，Windows 8 / Server 2012 及以上才有。
-- 服务器侧改了 compose 端口后，要同步改脚本里的 `-L` 参数和 `$ports` 表，否则会出现「本地能连但打开是空白/404」。
-
-**常见问题**：
-
-| 现象                               | 原因                                                                | 处理                                                                                                                                            |
-| -------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 运行报「字符串缺少终止符」「缺少 }」，报错行中文乱码      | 文件被存成**无 BOM 的 UTF-8**，Windows PowerShell 5.1 按本地 GBK 解码中文，引号配对错乱 | 用 `[System.IO.File]::WriteAllText($p, $c, (New-Object System.Text.UTF8Encoding($true)))` 存成 UTF-8 with BOM；或用 `pwsh`（PowerShell 7，默认 UTF-8）运行 |
-| 提示「端口 X 已被占用」                    | 上次隧道没退干净（窗口关了但 ssh 进程还在），或别的程序占了端口                                | `Get-NetTCPConnection -LocalPort 6185 -State Listen` 查占用 PID，必要时 `Stop-Process -Id <PID>`                                                     |
-| 隧道建立成功但页面打不开                     | 服务器侧端口变了（如 AstrBot 从 6185 改到 36185）                               | 上服务器 `docker ps` 看实际宿主机端口，改脚本对应 `-L`                                                                                                          |
-| 报 `UNPROTECTED PRIVATE KEY FILE` | 私钥权限过宽                                                            | 脚本会自动修；手动修见第六节第 7 条                                                                                                                           |
-| 连一会儿就断                           | 网络 NAT 超时或休眠                                                      | 脚本已带 ServerAlive；仍频繁断就先确认本地网络，再考虑 ssh 加 `-o TCPKeepAlive=yes`                                                                                 |
+**注意**：首次访问要在页面自己设管理员账号（setup 是 socket.io 事件，没有 REST 接口可预置）。它挂着 docker.sock，拥有全部容器管理权，所以只监听回环。`DOCKGE_STACKS_DIR` 指向 `/opt` 后，`alibabacloud`、`containerd` 这类非 stack 目录也会暴露给容器，但只有含 compose 文件的目录会显示在列表里。
