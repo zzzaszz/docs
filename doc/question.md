@@ -765,7 +765,7 @@ networks:
 
 ### netdata：系统与容器监控
 
-**作用**：采集宿主机 CPU / 内存 / 磁盘 / 网络，同时通过 cgroup 采集每个容器的资源占用（图表名直接是 `cgroup_astrbot.*`、`cgroup_snowluma.*`）。自带告警，适合盯 swap 和内存趋势。
+**作用**：采集宿主机 CPU / 内存 / 磁盘 / 网络，同时通过 cgroup 采集每个容器的资源占用。自带告警，适合盯 swap 和内存趋势。不支持中文。
 
 **关键配置**：
 
@@ -811,6 +811,8 @@ volumes:
 
 **注意**：`network_mode: host` 会绕开 compose 的端口绑定，镜像默认监听 `*:19999`，必须手动在 `/etc/netdata/netdata.conf` 写 `[web]` 段 `bind to = 127.0.0.1`，否则监控数据对整个网络可见（Netdata 无认证）。
 
+**界面截图**：
+![](static/Pasted%20image%2020261104141025.png)
 ### dozzle：容器日志
 
 **作用**：Web方式查看所有容器日志，支持实时跟踪、搜索、按容器过滤，并能重启容器。*<u>**注：不支持账号密码登录，无法更新到指定的版本，需使用下方的dockge。**</u>*
@@ -848,7 +850,7 @@ services:
 ![](static/Pasted%20image%2020261104140817.png)
 ### dockge：compose 可视化管理
 
-**作用**：Web 管理所有 compose stack，可查看/编辑 compose 文件、启停重启整个 stack、看日志，开了 Console 后还能进容器 shell 执行命令。
+**作用**：Web 管理所有容器，可查看/编辑 compose 文件、启停重启整个容器、看日志，开了 Console 后还能进容器 shell 执行命令，支持账号密码设置登录，通过docker登录支持自建的docker仓库Harbor等。
 
 **关键配置**：
 
@@ -878,3 +880,6 @@ services:
 ```
 
 **注意**：首次访问要在页面自己设管理员账号（setup 是 socket.io 事件，没有 REST 接口可预置）。它挂着 docker.sock，拥有全部容器管理权，所以只监听回环。`DOCKGE_STACKS_DIR` 指向 `/opt` 后，`alibabacloud`、`containerd` 这类非 stack 目录也会暴露给容器，但只有含 compose 文件的目录会显示在列表里。
+
+**界面截图**：
+![](static/Pasted%20image%2020261104141315.png)
