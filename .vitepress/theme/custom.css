@@ -373,8 +373,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
   margin-right: 8px;
   padding: 0;
   border: none;
@@ -386,7 +384,50 @@
   transition: color 0.2s, background-color 0.2s;
 }
 
+/* 不同层级用不同样式的箭头：h2 主色实心感、h3 灰色、h4 无底色 */
+.vp-doc h2.hc-heading .hc-toggle {
+  width: 24px;
+  height: 24px;
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+.vp-doc h2.hc-heading .hc-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vp-doc h3.hc-heading .hc-toggle {
+  width: 22px;
+  height: 22px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-default-soft);
+}
+
+.vp-doc h3.hc-heading .hc-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.vp-doc h4.hc-heading .hc-toggle {
+  width: 20px;
+  height: 20px;
+  color: var(--vp-c-text-3);
+  background: transparent;
+}
+
+.vp-doc h4.hc-heading .hc-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 悬停与折叠态：统一实心主色，状态一眼可辨 */
 .vp-doc .hc-heading .hc-toggle:hover {
+  color: #ffffff;
+  background: var(--vp-c-brand-1);
+}
+
+.vp-doc .hc-heading.hc-collapsed .hc-toggle {
   color: #ffffff;
   background: var(--vp-c-brand-1);
 }
@@ -395,45 +436,43 @@
   transition: transform 0.2s ease;
 }
 
-/* 折叠中的章节用主色标出来，一眼能看出哪里被收起了 */
-.vp-doc .hc-heading.hc-collapsed .hc-toggle {
-  color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-}
-
-.vp-doc .hc-heading.hc-collapsed .hc-toggle:hover {
-  color: #ffffff;
-  background: var(--vp-c-brand-1);
-}
-
 .vp-doc .hc-heading.hc-collapsed .hc-toggle svg {
   transform: rotate(-90deg);
 }
 
-/* 层级越高箭头越大，和标题字号对应 */
-.vp-doc .hc-heading .hc-toggle svg {
-  width: 16px;
-  height: 16px;
+/* 子标题按层级缩进，避免 h2/h3/h4 看起来是同级 */
+.vp-doc h2.hc-heading {
+  margin-left: 0;
 }
 
-.vp-doc h2.hc-heading .hc-toggle {
-  width: 24px;
-  height: 24px;
+.vp-doc h3.hc-heading {
+  margin-left: 32px;
 }
 
-.vp-doc h2.hc-heading .hc-toggle svg {
-  width: 18px;
-  height: 18px;
+.vp-doc h4.hc-heading {
+  margin-left: 64px;
 }
 
-.vp-doc h4.hc-heading .hc-toggle {
-  width: 20px;
-  height: 20px;
+/* 正文跟随所属标题一起缩进，形成嵌套区块
+   :not(.hc-hidden) 用来提高优先级，覆盖 VitePress 给代码块/表格等设置的 margin */
+.vp-doc .hc-l3:not(.hc-hidden) {
+  margin-left: 32px;
 }
 
-.vp-doc h4.hc-heading .hc-toggle svg {
-  width: 14px;
-  height: 14px;
+.vp-doc .hc-l4:not(.hc-hidden) {
+  margin-left: 64px;
+}
+
+@media (max-width: 768px) {
+  .vp-doc h3.hc-heading,
+  .vp-doc .hc-l3:not(.hc-hidden) {
+    margin-left: 14px;
+  }
+
+  .vp-doc h4.hc-heading,
+  .vp-doc .hc-l4:not(.hc-hidden) {
+    margin-left: 28px;
+  }
 }
 
 /* 折叠后隐藏的区块 */

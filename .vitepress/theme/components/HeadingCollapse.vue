@@ -27,6 +27,7 @@ function getRoot(): HTMLElement | null {
 /** 按标题的父节点分组刷新：每个元素是否隐藏在扫描时统一算出，避免嵌套折叠互相干扰 */
 function refreshGroup(parent: Element) {
   const stack: number[] = []
+  let sectionLevel = 0
 
   for (const el of Array.from(parent.children)) {
     const level = levelOf(el)
@@ -39,6 +40,9 @@ function refreshGroup(parent: Element) {
       // 被外层折叠隐藏的标题不参与展开，但保留自身折叠状态
       if (!hidden && el.classList.contains(COLLAPSED)) stack.push(level)
 
+      sectionLevel = level
+      el.classList.remove('hc-l3', 'hc-l4')
+
       const btn = el.querySelector(':scope > .' + BTN_CLASS)
       if (btn) {
         const collapsed = el.classList.contains(COLLAPSED)
@@ -47,6 +51,9 @@ function refreshGroup(parent: Element) {
       }
     } else {
       el.classList.toggle(HIDDEN, stack.length > 0)
+      // 正文跟随所属标题层级缩进，让层级关系看起来是嵌套的
+      el.classList.toggle('hc-l3', sectionLevel === 3)
+      el.classList.toggle('hc-l4', sectionLevel >= 4)
     }
   }
 }
